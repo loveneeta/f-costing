@@ -60,9 +60,9 @@ export const Sidebar: React.FC = () => {
               <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Platform Admin</h3>
             </div>
             <NavLink to="/superadmin/dashboard" icon={ShieldAlert} label="Platform Dashboard" />
-            <NavLink to="/superadmin/tenants" icon={Building} label="Companies" />
+            
             <NavLink to="/superadmin/subscriptions" icon={Layers} label="Subscriptions" />
-            <NavLink to="/superadmin/payments" icon={FileBox} label="Payments" />
+
 
             <SectionHeader title="Developer" />
             <NavLink to="/superadmin/developer/features" icon={Flag} label="Feature Flags" />

@@ -64,7 +64,7 @@ export const AcceptInvitation: React.FC = () => {
       await register({
         email: email!,
         password,
-        name,
+        name: invData.name || name,
         role: invData.role,
         tenantId: invData.tenantId,
       });

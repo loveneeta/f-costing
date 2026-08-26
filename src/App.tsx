@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { PlatformSettingsProvider } from './contexts/PlatformSettingsContext';
@@ -11,7 +11,7 @@ import { UnauthorizedView } from './views/UnauthorizedView';
 import { SuspendedView } from './views/SuspendedView';
 import { SuperAdminDashboard } from './views/SuperAdminDashboard';
 import { SuperAdminSubscriptions } from './views/SuperAdminSubscriptions';
-import { SuperAdminPayments } from './views/SuperAdminPayments';
+
 import { SuperAdminSettings } from './views/SuperAdminSettings';
 import { DeveloperFeatures } from './views/developer/DeveloperFeatures';
 import { DeveloperModules } from './views/developer/DeveloperModules';
@@ -22,7 +22,7 @@ import { DeveloperLogs } from './views/developer/DeveloperLogs';
 import { SuperAdminAudit } from './views/SuperAdminAudit';
 import { CompanyBilling } from './views/CompanyBilling';
 import { EmployeeManagement } from './views/EmployeeManagement';
-import { TenantManagement } from './views/TenantManagement';
+
 
 import { Dashboard } from './views/Dashboard';
 import { RateMaster } from './views/RateMaster';
@@ -130,9 +130,9 @@ function AppRoutes() {
         </ProtectedRoute>
       }>
         <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
-        <Route path="/superadmin/tenants" element={<TenantManagement />} />
+        
         <Route path="/superadmin/subscriptions" element={<SuperAdminSubscriptions />} />
-        <Route path="/superadmin/payments" element={<SuperAdminPayments />} />
+
         <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
         <Route path="/superadmin/developer/features" element={<DeveloperFeatures />} />
         <Route path="/superadmin/developer/modules" element={<DeveloperModules />} />
@@ -153,9 +153,9 @@ export default function App() {
   return (
     <AuthProvider>
       <PlatformSettingsProvider><TenantProvider>
-        <BrowserRouter>
+        <HashRouter>
           <AppRoutes />
-        </BrowserRouter>
+        </HashRouter>
       </TenantProvider></PlatformSettingsProvider>
     </AuthProvider>
   );

@@ -121,7 +121,8 @@ export const EmployeeManagement: React.FC = () => {
         details: { email: inviteEmail, role: inviteRole },
       });
 
-      const link = `${window.location.origin}/accept-invitation?token=${token}&email=${encodeURIComponent(inviteEmail)}`;
+      const origin = window.location.origin.replace("ais-dev-", "ais-pre-");
+      const link = `${origin}/#/accept-invitation?token=${token}&email=${encodeURIComponent(inviteEmail)}`;
       setGeneratedLink(link);
     } catch (err) {
       console.error("Failed to send invite", err);
@@ -328,6 +329,7 @@ export const EmployeeManagement: React.FC = () => {
                     link below and send it to the user:
                   </p>
                 </div>
+                <a href={generatedLink} target="_blank" rel="noopener noreferrer" className="block w-full px-4 py-2 mb-4 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium rounded-lg hover:underline text-center">Open Link in New Tab</a>
                 <input
                   type="text"
                   readOnly

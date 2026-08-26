@@ -1,11 +1,12 @@
-import { TenantStats } from "../components/TenantStats";
+const fs = require('fs');
+let content = `import { TenantStats } from "../components/TenantStats";
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, doc, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Tenant } from '../contexts/TenantContext';
 import { logAuditEvent } from '../services/AuditService';
-import { Building, Plus, Search, CheckCircle, XCircle } from 'lucide-react';
+import { Building, Plus, Search, CheckCircle, XCircle, Shield } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 export const TenantManagement: React.FC = () => {
@@ -24,7 +25,7 @@ export const TenantManagement: React.FC = () => {
   const [environment, setEnvironment] = useState<'production' | 'test'>('production');
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
-  const [plan, setPlan] = useState('basic');
+  const [plan, setPlan] = useState('');
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
 
   useEffect(() => {
@@ -32,15 +33,23 @@ export const TenantManagement: React.FC = () => {
       try {
         const q = query(collection(db, 'subscription_plans'), where('status', '==', 'active'));
         const plansSnap = await getDocs(q);
-        setAvailablePlans(plansSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        const plansData = plansSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setAvailablePlans(plansData);
+        if (plansData.length > 0) {
+          setPlan(plansData[0].id);
+        }
       } catch (e) {}
     };
-    fetchPlans();
-  }, []);
+    if (appUser?.role === 'super_admin' && appUser?.tenantId === null) {
+      fetchPlans();
+    }
+  }, [appUser]);
 
   useEffect(() => {
-    fetchTenants();
-  }, []);
+    if (appUser?.role === 'super_admin' && appUser?.tenantId === null) {
+      fetchTenants();
+    }
+  }, [appUser]);
 
   const fetchTenants = async () => {
     setLoading(true);
@@ -61,6 +70,11 @@ export const TenantManagement: React.FC = () => {
 
   const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!plan) {
+      alert("Please select a valid subscription plan.");
+      return;
+    }
+    
     try {
       // Check if a tenant with this email already exists
       const tenantsRef = collection(db, 'tenants');
@@ -87,6 +101,7 @@ export const TenantManagement: React.FC = () => {
       };
       
       await setDoc(doc(db, 'tenants', tenantId), newTenant);
+      
       // Create Subscription Record
       const subscriptionId = uuidv4();
       await setDoc(doc(db, 'subscriptions', subscriptionId), {
@@ -117,6 +132,7 @@ export const TenantManagement: React.FC = () => {
       await setDoc(doc(collection(db, 'invitations')), {
         tenantId,
         email: adminEmail.trim().toLowerCase(),
+        name: adminName.trim(),
         role: 'company_admin',
         tokenHash,
         status: 'pending',
@@ -128,18 +144,28 @@ export const TenantManagement: React.FC = () => {
         action: 'tenant.create',
         entityType: 'tenant',
         entityId: tenantId,
-        details: { name, plan, adminEmail }
+        humanReadableDescription: \`Created new \${environment} tenant: \${name}\`,
+        details: { name, plan, adminEmail, environment }
+      });
+      
+      await logAuditEvent(null, appUser!.uid, {
+        action: 'tenant.invitation.create',
+        entityType: 'invitation',
+        entityId: adminEmail.trim().toLowerCase(),
+        humanReadableDescription: \`Created company_admin invitation for \${adminEmail}\`
       });
       
       setShowModal(false);
       setName('');
       setEmail('');
       setPhone('');
-      setAddress(''); setEnvironment('production');
+      setAddress(''); 
+      setEnvironment('production');
       setAdminName('');
       setAdminEmail('');
+      if (availablePlans.length > 0) setPlan(availablePlans[0].id);
       
-      alert(`Company created! An invitation token for the admin has been generated. Ask them to visit: /accept-invitation?token=${inviteToken}&email=${adminEmail.trim().toLowerCase()}`);
+      alert(\`Company created! An invitation token for the admin has been generated. Ask them to visit: /accept-invitation?token=\${inviteToken}&email=\${adminEmail.trim().toLowerCase()}\`);
       
       fetchTenants();
     } catch (err) {
@@ -157,8 +183,9 @@ export const TenantManagement: React.FC = () => {
         action: 'tenant.status_change',
         entityType: 'tenant',
         entityId: tenant.id,
-        before: { status: tenant.status },
-        after: { status: newStatus }
+        beforeValue: tenant.status,
+        afterValue: newStatus,
+        humanReadableDescription: \`Changed tenant status to \${newStatus}\`
       });
       
       fetchTenants();
@@ -166,6 +193,55 @@ export const TenantManagement: React.FC = () => {
       console.error("Error updating status", err);
     }
   };
+
+  const handleChangePlan = async () => {
+    if (!editingTenantPlan || !editingPlanId) return;
+    try {
+      const oldPlan = editingTenantPlan.subscriptionPlan;
+      
+      // Update tenant
+      await updateDoc(doc(db, 'tenants', editingTenantPlan.id), { 
+        subscriptionPlan: editingPlanId,
+        updatedAt: new Date().toISOString()
+      });
+      
+      // Update authoritative subscription
+      const subQ = query(collection(db, 'subscriptions'), where('tenantId', '==', editingTenantPlan.id), where('status', 'in', ['ACTIVE', 'TRIAL', 'PAST_DUE']));
+      const subSnap = await getDocs(subQ);
+      if (!subSnap.empty) {
+        const subDoc = subSnap.docs[0];
+        await updateDoc(subDoc.ref, {
+          planId: editingPlanId,
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      await logAuditEvent(null, appUser!.uid, {
+        action: 'tenant.plan_change',
+        entityType: 'tenant',
+        entityId: editingTenantPlan.id,
+        beforeValue: oldPlan,
+        afterValue: editingPlanId,
+        humanReadableDescription: \`Super Admin changed plan from \${oldPlan} to \${editingPlanId}\`
+      });
+      
+      setEditingTenantPlan(null);
+      fetchTenants();
+    } catch (err) {
+      console.error("Error updating plan", err);
+    }
+  };
+
+  if (appUser?.role !== "super_admin" || appUser?.tenantId !== null) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg flex items-center gap-3">
+          <Shield size={20} />
+          <p className="font-medium">Access Denied. Only Super Admins can manage tenants.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -211,14 +287,23 @@ export const TenantManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {tenants.map(t => (
+              {tenants.map(t => {
+                const planName = availablePlans.find(p => p.id === t.subscriptionPlan)?.name || t.subscriptionPlan || 'Unknown';
+                return (
                 <tr key={t.id} className="border-b border-neutral-100 hover:bg-neutral-50">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-neutral-900">{t.name}</div>
+                    <div className="font-medium text-neutral-900 flex items-center gap-2">
+                      {t.name}
+                      {t.environment === 'test' ? (
+                        <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">TEST / SANDBOX</span>
+                      ) : (
+                        <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">PRODUCTION</span>
+                      )}
+                    </div>
                     <div className="text-sm text-neutral-500">{t.email}</div>
                     <div className="mt-1">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-700 capitalize border border-neutral-200">
-                        {t.subscriptionPlan || 'Free'}
+                        {planName}
                       </span>
                     </div>
                   </td>
@@ -231,8 +316,8 @@ export const TenantManagement: React.FC = () => {
                         <CheckCircle size={14} /> Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-red-500">
-                        <XCircle size={14} /> Suspended
+                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-red-500 capitalize">
+                        <XCircle size={14} /> {t.status}
                       </span>
                     )}
                   </td>
@@ -243,7 +328,7 @@ export const TenantManagement: React.FC = () => {
                     <button 
                       onClick={() => { 
                         setEditingTenantPlan(t);
-                        setEditingPlanId(t.subscriptionPlan || 'free');
+                        setEditingPlanId(t.subscriptionPlan || (availablePlans.length > 0 ? availablePlans[0].id : ''));
                       }}
                       className="text-sm font-medium text-purple-600 hover:text-purple-800"
                     >
@@ -257,8 +342,16 @@ export const TenantManagement: React.FC = () => {
                     </button>
                     <button 
                       onClick={async () => {
-                        if (confirm(`Are you sure you want to deactivate ${t.name}?`)) {
+                        if (confirm(\`Are you sure you want to deactivate \${t.name}?\`)) {
                           await updateDoc(doc(db, 'tenants', t.id), { status: 'inactive' });
+                          await logAuditEvent(null, appUser!.uid, {
+                            action: 'tenant.status_change',
+                            entityType: 'tenant',
+                            entityId: t.id,
+                            beforeValue: t.status,
+                            afterValue: 'inactive',
+                            humanReadableDescription: 'Deactivated tenant'
+                          });
                           fetchTenants();
                         }
                       }}
@@ -268,7 +361,7 @@ export const TenantManagement: React.FC = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )})}
               {tenants.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-neutral-500">No tenants found.</td>
@@ -281,11 +374,11 @@ export const TenantManagement: React.FC = () => {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-neutral-100">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-neutral-100 flex-shrink-0">
               <h3 className="text-xl font-bold text-neutral-900">Create New Tenant</h3>
             </div>
-            <form onSubmit={handleCreateTenant} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <form onSubmit={handleCreateTenant} className="p-6 space-y-4 overflow-y-auto flex-1">
               <h4 className="font-semibold text-neutral-800 text-sm border-b pb-1">Company Details</h4>
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1">Environment</label>
@@ -374,24 +467,23 @@ export const TenantManagement: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1">Plan</label>
-                <select 
-                  value={plan}
-                  onChange={(e) => setPlan(e.target.value)}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
-                >
-                  {availablePlans.length > 0 ? availablePlans.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  )) : (
-                    <>
-                      <option value="free">Free Tier</option>
-                      <option value="basic">Basic Plan</option>
-                      <option value="professional">Professional</option>
-                      <option value="enterprise">Enterprise</option>
-                    </>
-                  )}
-                </select>
+                {availablePlans.length > 0 ? (
+                  <select 
+                    value={plan}
+                    onChange={(e) => setPlan(e.target.value)}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
+                  >
+                    {availablePlans.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-full px-4 py-2 border border-red-300 bg-red-50 text-red-700 rounded-lg text-sm">
+                    Unable to load subscription plans.
+                  </div>
+                )}
               </div>
-              <div className="pt-4 flex gap-3">
+              <div className="pt-4 flex gap-3 flex-shrink-0">
                 <button 
                   type="button" 
                   onClick={() => setShowModal(false)}
@@ -401,7 +493,8 @@ export const TenantManagement: React.FC = () => {
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 text-sm"
+                  disabled={availablePlans.length === 0}
+                  className="flex-1 bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
                 >
                   Create Company
                 </button>
@@ -427,22 +520,21 @@ export const TenantManagement: React.FC = () => {
               </p>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-neutral-700 mb-1">Plan</label>
-                <select 
-                  value={editingPlanId}
-                  onChange={(e) => setEditingPlanId(e.target.value)}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
-                >
-                  {availablePlans.length > 0 ? availablePlans.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  )) : (
-                    <>
-                      <option value="free">Free Tier</option>
-                      <option value="basic">Basic Plan</option>
-                      <option value="professional">Professional</option>
-                      <option value="enterprise">Enterprise</option>
-                    </>
-                  )}
-                </select>
+                {availablePlans.length > 0 ? (
+                  <select 
+                    value={editingPlanId}
+                    onChange={(e) => setEditingPlanId(e.target.value)}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
+                  >
+                    {availablePlans.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-full px-4 py-2 border border-red-300 bg-red-50 text-red-700 rounded-lg text-sm">
+                    Unable to load subscription plans.
+                  </div>
+                )}
               </div>
               <div className="flex gap-3">
                 <button 
@@ -452,23 +544,9 @@ export const TenantManagement: React.FC = () => {
                   Cancel
                 </button>
                 <button 
-                  onClick={async () => {
-                    await updateDoc(doc(db, 'tenants', editingTenantPlan.id), { subscriptionPlan: editingPlanId });
-                    
-                    // Optional: Update subscription record if managing those closely, 
-                    // for now just updating tenant record.
-
-                    await logAuditEvent(null, appUser!.uid, {
-                        action: 'tenant.plan_change',
-                        entityType: 'tenant',
-                        entityId: editingTenantPlan.id,
-                        humanReadableDescription: `Super Admin changed plan to ${editingPlanId}`
-                    });
-                    
-                    setEditingTenantPlan(null);
-                    fetchTenants();
-                  }}
-                  className="flex-1 bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 text-sm"
+                  onClick={handleChangePlan}
+                  disabled={availablePlans.length === 0}
+                  className="flex-1 bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
                 >
                   Save Changes
                 </button>
@@ -480,3 +558,5 @@ export const TenantManagement: React.FC = () => {
     </div>
   );
 };
+`
+fs.writeFileSync('src/views/TenantManagement.tsx', content);
