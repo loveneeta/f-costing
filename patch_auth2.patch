@@ -1,0 +1,18 @@
+--- src/contexts/AuthContext.tsx
++++ src/contexts/AuthContext.tsx
+@@ -407,7 +407,14 @@
+           where("email", "==", cleanEmail),
+           where("status", "==", "pending")
+         );
+-        const invSnap = await getDocs(q);
++        console.log("Querying invitations for", cleanEmail, "with tokenHash", tokenHash);
++        let invSnap;
++        try {
++          invSnap = await getDocs(q);
++        } catch (getDocsErr) {
++          console.error("Failed to query invitations:", getDocsErr);
++          throw getDocsErr;
++        }
+         if (invSnap.empty) {
+           throw new Error("Invitation is invalid or expired.");
+         }

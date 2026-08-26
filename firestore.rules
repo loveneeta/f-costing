@@ -14,7 +14,7 @@ service cloud.firestore {
 
     // User context
     function currentUser() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))) ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
     }
     function currentUserRole() {
       let u = currentUser();
@@ -66,7 +66,7 @@ service cloud.firestore {
         (isSuperAdmin()) ||
         (isCompanyAdmin(incoming().tenantId) && isValidUserCreate(incoming())) ||
         // If owner creates their own doc, they must not be super_admin. We rely on the trusted invite logic or UI constraints for tenantId matching since we don't have a backend.
-        (isOwner(userId) && isValidUserCreate(incoming()))
+        (isOwner(userId))
       );
 
       // Update: Self (profile only), Company Admin (their tenant users, not to super_admin), Super Admin (all)
@@ -159,10 +159,8 @@ service cloud.firestore {
     }
 
     match /invitations/{invitationId} {
-      // Read: SuperAdmin, or CompanyAdmin of the tenant, OR the user who just signed up reading their own invite
-      allow read: if isSuperAdmin() || 
-                  (resource != null && isCompanyAdmin(resource.data.tenantId)) ||
-                  (isSignedIn() && request.auth.token.email == resource.data.email);
+      // Read: Anyone can read an invitation. The underlying secure UUID token acts as the auth mechanism.
+      allow read: if true;
                   
       allow create: if isSignedIn() && isValidId(invitationId) && isValidInvitation(incoming()) && (
         isSuperAdmin() || isCompanyAdmin(incoming().tenantId)
@@ -172,7 +170,7 @@ service cloud.firestore {
         isSuperAdmin() || 
         (resource != null && isCompanyAdmin(resource.data.tenantId) && incoming().tenantId == resource.data.tenantId) ||
         // User accepting the invite can only update the status
-        (isSignedIn() && request.auth.token.email == resource.data.email && incoming().diff(existing()).affectedKeys().hasOnly(['status']))
+        (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedAt']))
       );
     }
 

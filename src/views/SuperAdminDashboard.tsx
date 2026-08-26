@@ -154,8 +154,7 @@ export const SuperAdminDashboard: React.FC = () => {
       setNewTenantAdminEmail('');
       if (plans.length > 0) setNewTenantPlan(plans[0].id);
       
-      const origin = window.location.origin;
-      setGeneratedLink(`${origin}/#/accept-invitation?token=${inviteToken}&email=${newTenantAdminEmail.trim().toLowerCase()}`);
+      setGeneratedLink(`https://f-costing.vercel.app/#/accept-invitation?token=${inviteToken}&email=${newTenantAdminEmail.trim().toLowerCase()}`);
       
       fetchData();
     } catch (err) {

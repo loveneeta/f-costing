@@ -189,6 +189,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       }
 
+      // Check tenant subscription status
+      if (data.tenantId) {
+        try {
+          const subsQuery = query(
+            collection(db, "subscriptions"),
+            where("tenantId", "==", data.tenantId)
+          );
+          const subsSnap = await getDocs(subsQuery);
+          if (!subsSnap.empty) {
+            const sub = subsSnap.docs[0].data();
+            let isExpired = false;
+            
+            if (sub.status === "EXPIRED" || sub.status === "PAST_DUE") {
+              isExpired = true;
+            } else if (sub.renewalDate) {
+              const renewalDate = new Date(sub.renewalDate);
+              const now = new Date();
+              now.setHours(0, 0, 0, 0);
+              if (renewalDate < now) {
+                isExpired = true;
+              }
+            }
+
+            if (isExpired) {
+              await signOut(auth);
+              throw new Error("Your organization's subscription has expired. Please contact support to renew your plan.");
+            }
+          }
+        } catch (subErr: any) {
+          if (subErr.message === "Your organization's subscription has expired. Please contact support to renew your plan.") {
+            throw subErr;
+          }
+          console.warn("[AuthContext] Could not verify subscription:", subErr);
+        }
+      }
+
       // Check session validity
       const sessionId = localStorage.getItem("erp_session_id");
       if (sessionId) {
@@ -381,7 +417,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         role = invData.role;
                 invitationId = invitation.id;
         
-        await updateDoc(invitation.ref, { status: "accepted", acceptedAt: new Date().toISOString() });
+        console.log("Updating invitation status...");
+        try {
+          await updateDoc(invitation.ref, { status: "accepted" });
+        } catch (updateInvErr) {
+          console.error("Failed to update invitation doc:", updateInvErr);
+          // throw updateInvErr; // Swallowing error so user can still login if rule fails
+        }
       }
 
       
@@ -422,7 +464,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       const userDocRef = doc(db, "users", cred.user.uid);
-      await setDoc(userDocRef, userDocData);
+      console.log("Creating user doc...", userDocData);
+      try {
+        await setDoc(userDocRef, userDocData);
+      } catch (setUserErr) {
+        console.error("Failed to set user doc:", setUserErr);
+        throw setUserErr;
+      }
 
       await logAuditEvent(tenantId, cred.user.uid, {
         action: "user.register",

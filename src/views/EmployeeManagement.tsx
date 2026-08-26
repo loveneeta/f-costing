@@ -105,7 +105,7 @@ export const EmployeeManagement: React.FC = () => {
 
       const invData = {
         tenantId: appUser.tenantId,
-        email: inviteEmail,
+        email: inviteEmail.trim().toLowerCase(),
         role: inviteRole,
         tokenHash,
         status: "pending",

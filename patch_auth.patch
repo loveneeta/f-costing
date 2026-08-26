@@ -1,0 +1,41 @@
+--- src/contexts/AuthContext.tsx
++++ src/contexts/AuthContext.tsx
+@@ -410,21 +410,31 @@
+         );
+         const invSnap = await getDocs(q);
+         if (invSnap.empty) {
+           throw new Error("Invitation is invalid or expired.");
+         }
+         const invitation = invSnap.docs[0];
+         const invData = invitation.data();
+         tenantId = invData.tenantId;
+         role = invData.role;
+         invitationId = invitation.id;
+         
++        console.log("Updating invitation status...");
+-        await updateDoc(invitation.ref, { status: "accepted" });
++        try {
++          await updateDoc(invitation.ref, { status: "accepted" });
++        } catch (updateInvErr) {
++          console.error("Failed to update invitation doc:", updateInvErr);
++          throw updateInvErr;
++        }
+       }
+ 
+       // If registering a new company/tenant
+       if (params.companyName) {
+@@ -458,7 +468,13 @@
+       };
+ 
+       const userDocRef = doc(db, "users", cred.user.uid);
++      console.log("Creating user doc...", userDocData);
+-      await setDoc(userDocRef, userDocData);
++      try {
++        await setDoc(userDocRef, userDocData);
++      } catch (setUserErr) {
++        console.error("Failed to set user doc:", setUserErr);
++        throw setUserErr;
++      }
+ 
+       await logAuditEvent(tenantId, cred.user.uid, {
+         action: "user.register",
