@@ -1,0 +1,102 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Application User Profile",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["super_admin", "admin", "manager", "employee"] },
+        "tenantId": { "type": "string", "nullable": true },
+        "status": { "type": "string", "enum": ["active", "inactive", "suspended"] },
+        "isSuperAdmin": { "type": "boolean" },
+        "permissions": { "type": "array", "items": { "type": "string" } },
+        "department": { "type": "string" },
+        "designation": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "failedLoginAttempts": { "type": "number" },
+        "lockedUntil": { "type": "string", "nullable": true }
+      }
+    },
+    "Session": {
+      "title": "Session",
+      "description": "User login session",
+      "type": "object",
+      "properties": {
+        "userAgent": { "type": "string" },
+        "ip": { "type": "string", "nullable": true },
+        "loginTime": { "type": "string" },
+        "lastActivity": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "revoked"] }
+      }
+    },
+    "Tenant": {
+      "title": "Tenant",
+      "description": "Company/Tenant",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "status": { "type": "string" },
+        "subscriptionPlan": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "Employee Invitation",
+      "type": "object",
+      "properties": {
+        "tenantId": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" },
+        "token": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "revoked", "expired"] },
+        "expiresAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "System Audit Log",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "tenantId": { "type": "string", "nullable": true },
+        "userId": { "type": "string", "nullable": true },
+        "action": { "type": "string" },
+        "entityType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "beforeValue": { "type": "object", "nullable": true },
+        "afterValue": { "type": "object", "nullable": true },
+        "humanReadableDescription": { "type": "string", "nullable": true },
+        "details": { "type": "object", "nullable": true }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/Session" },
+      "description": "User active sessions"
+    },
+    "tenants/{tenantId}": {
+      "schema": { "$ref": "#/entities/Tenant" },
+      "description": "Tenant organizations"
+    },
+    "invitations/{invitationId}": {
+      "schema": { "$ref": "#/entities/Invitation" },
+      "description": "Employee invitations"
+    },
+    "audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Global and tenant audit logs"
+    }
+  }
+}

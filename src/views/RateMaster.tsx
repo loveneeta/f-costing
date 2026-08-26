@@ -3,6 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { RateItem, RateCategory, Unit } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Trash2, Save, Edit2 } from 'lucide-react';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface TabConfig {
   id: string;
@@ -19,6 +20,7 @@ export function RateMaster({ title, tabs }: Props) {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RateItem>>({});
+  const [rateToDelete, setRateToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     setActiveTab(tabs[0].id);
@@ -146,7 +148,7 @@ export function RateMaster({ title, tabs }: Props) {
                       <td className="p-4 text-right font-mono font-medium text-neutral-800">₹{rate.rate.toFixed(2)}</td>
                       <td className="p-4 flex justify-center gap-2">
                         <button onClick={() => handleEdit(rate)} className="p-2 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16} /></button>
-                        <button onClick={() => { if(confirm('Delete this rate?')) deleteRate(rate.id) }} className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                        <button onClick={() => setRateToDelete(rate.id)} className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
                       </td>
                     </>
                   )}
@@ -163,6 +165,19 @@ export function RateMaster({ title, tabs }: Props) {
           </table>
         </div>
       </div>
+
+      {rateToDelete && (
+        <ConfirmModal
+          title="Delete Rate"
+          message="Are you sure you want to delete this rate? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={() => {
+            deleteRate(rateToDelete);
+            setRateToDelete(null);
+          }}
+          onCancel={() => setRateToDelete(null)}
+        />
+      )}
     </div>
   );
 }

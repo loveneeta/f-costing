@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Project } from '../types';
 import { calculateProjectCost } from '../engine';
 import { Edit2, Trash2, Copy, FilePlus2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Props {
   onEdit: (p: Project) => void;
@@ -12,6 +13,7 @@ interface Props {
 
 export function TemplatesList({ onEdit, onUseTemplate }: Props) {
   const { projects, deleteProject, addProject, rates, settings, woodTypes } = useStore();
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
   
   const templates = projects.filter(p => p.isTemplate);
 
@@ -46,7 +48,7 @@ export function TemplatesList({ onEdit, onUseTemplate }: Props) {
                 <tr>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Template Name</th>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Category</th>
-                  <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Size (mm)</th>
+                  <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Size</th>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider text-right">Selling Price</th>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider text-center">Actions</th>
                 </tr>
@@ -61,7 +63,7 @@ export function TemplatesList({ onEdit, onUseTemplate }: Props) {
                         {p.subName && <div className="text-xs text-indigo-500 mt-0.5">{p.subName}</div>}
                       </td>
                       <td className="p-4 text-neutral-600 text-sm">{p.category || '-'}</td>
-                      <td className="p-4 text-neutral-600 text-sm">{p.overallL} × {p.overallW} × {p.overallH}</td>
+                      <td className="p-4 text-neutral-600 text-sm">{p.overallL} × {p.overallW} × {p.overallH} {p.dimensionUnit || 'mm'}</td>
                       <td className="p-4 text-right font-mono font-bold text-emerald-600">₹{results.totals.grandTotal.toFixed(0)}</td>
                       <td className="p-4 flex justify-center gap-2">
                         <button onClick={() => onUseTemplate(p)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Create a new costing from this template">
@@ -73,7 +75,7 @@ export function TemplatesList({ onEdit, onUseTemplate }: Props) {
                         <button onClick={() => handleDuplicate(p)} className="p-2 text-neutral-600 hover:bg-neutral-200 rounded-lg transition-colors" title="Duplicate">
                           <Copy size={16} />
                         </button>
-                        <button onClick={() => { if(confirm('Are you sure you want to delete this template?')) deleteProject(p.id) }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                        <button onClick={() => setTemplateToDelete(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       </td>
@@ -85,6 +87,19 @@ export function TemplatesList({ onEdit, onUseTemplate }: Props) {
           </div>
         )}
       </div>
+
+      {templateToDelete && (
+        <ConfirmModal
+          title="Delete Template"
+          message="Are you sure you want to delete this template? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={() => {
+            deleteProject(templateToDelete);
+            setTemplateToDelete(null);
+          }}
+          onCancel={() => setTemplateToDelete(null)}
+        />
+      )}
     </div>
   );
 }

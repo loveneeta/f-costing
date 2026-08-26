@@ -3,7 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { Project, SheetComponent, HardwareComponent, SolidWoodComponent, FinishingComponent, LabourComponent } from '../types';
 import { calculateProjectCost } from '../engine';
 import { v4 as uuidv4 } from 'uuid';
-import { Plus, Trash2, ArrowLeft, Save, FileText, Layers, TreePine, Wrench, Copy } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Save, FileText, Layers, TreePine, Wrench, Copy, HardHat, Paintbrush } from 'lucide-react';
 import { SaveSuccessModal } from '../components/SaveSuccessModal';
 
 interface Props {
@@ -55,12 +55,13 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
   const sheetRates = rates.filter(r => ['sheet', 'ply', 'board', 'veneer_sheet'].includes(r.category));
   const edgeRates = rates.filter(r => ['edgeband', 'veneer_edge'].includes(r.category));
   const hwRates = rates.filter(r => r.category === 'hardware');
+  const finishingRates = rates.filter(r => r.category === 'finishing');
   
   const updateProj = (updates: Partial<Project>) => setProject(prev => ({ ...prev, ...updates }));
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden font-sans">
-      {successModal.show && <SaveSuccessModal message={successModal.title} subMessage={successModal.sub} onClose={() => setSuccessModal({show: false, title: ''})} />}
+      {successModal.show && <SaveSuccessModal message={successModal.title} subMessage={successModal.sub} onClose={() => setSuccessModal({show: false, title: ''})} onSaveAsTemplate={successModal.title === 'Costing saved successfully' ? handleSaveAsTemplate : undefined} />}
       {/* Editor Header */}
       <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 z-20 shadow-sm">
         <div className="flex items-center gap-4">
@@ -99,27 +100,48 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                 <FileText className="text-blue-500" size={18} />
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Item Specifications</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Item Name</label>
                   <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition-all" value={project.name} onChange={e => updateProj({ name: e.target.value })} placeholder="e.g. Bedside Table" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Variation / Sub Name</label>
-                  <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition-all" value={project.subName || ''} onChange={e => updateProj({ subName: e.target.value })} placeholder="e.g. 1 tier, 2 door" />
+                  <input type="text" list="variation-suggestions" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition-all" value={project.subName || ''} onChange={e => updateProj({ subName: e.target.value })} placeholder="e.g. 1 tier, 2 door" />
+                  <datalist id="variation-suggestions">
+                    <option value="1-tier" />
+                    <option value="2-tier" />
+                    <option value="3-tier" />
+                    <option value="1-door" />
+                    <option value="2-door" />
+                    <option value="1-drawer" />
+                    <option value="2-drawer" />
+                    <option value="Shelf" />
+                    <option value="Glass Door" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Category</label>
                   <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition-all" value={project.category} onChange={e => updateProj({ category: e.target.value })} placeholder="e.g. Cabinet" />
                 </div>
-                <div className="lg:col-span-1">
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Overall Dimensions (mm)</label>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Unit</label>
+                  <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition-all" value={project.dimensionUnit || 'mm'} onChange={e => updateProj({ dimensionUnit: e.target.value as any })}>
+                    <option value="mm">mm</option>
+                    <option value="cm">cm</option>
+                    <option value="inch">inches</option>
+                    <option value="ft">feet</option>
+                    <option value="m">meters</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2 lg:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Overall Dimensions ({project.dimensionUnit || 'mm'})</label>
                   <div className="flex items-center gap-2">
-                    <input type="number" placeholder="L" className="w-24 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-center transition-all" value={project.overallL || ''} onChange={e => updateProj({ overallL: Number(e.target.value) })} />
+                    <input type="number" placeholder={`L (${project.dimensionUnit || 'mm'})`} className="w-24 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-center transition-all" value={project.overallL || ''} onChange={e => updateProj({ overallL: Number(e.target.value) })} />
                     <span className="text-slate-400 font-medium">×</span>
-                    <input type="number" placeholder="W" className="w-24 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-center transition-all" value={project.overallW || ''} onChange={e => updateProj({ overallW: Number(e.target.value) })} />
+                    <input type="number" placeholder={`W (${project.dimensionUnit || 'mm'})`} className="w-24 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-center transition-all" value={project.overallW || ''} onChange={e => updateProj({ overallW: Number(e.target.value) })} />
                     <span className="text-slate-400 font-medium">×</span>
-                    <input type="number" placeholder="H" className="w-24 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-center transition-all" value={project.overallH || ''} onChange={e => updateProj({ overallH: Number(e.target.value) })} />
+                    <input type="number" placeholder={`H (${project.dimensionUnit || 'mm'})`} className="w-24 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-center transition-all" value={project.overallH || ''} onChange={e => updateProj({ overallH: Number(e.target.value) })} />
                   </div>
                 </div>
               </div>
@@ -145,7 +167,7 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                     <tr className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
                       <th className="p-4 w-40">Component</th>
                       <th className="p-4 w-16 text-center">Qty</th>
-                      <th className="p-4 w-32 text-center">Size (L×W)</th>
+                      <th className="p-4 w-32 text-center">Size (L×W) in {project.dimensionUnit || 'mm'}</th>
                       <th className="p-4 w-40">Material Rate</th>
                       <th className="p-4 text-center border-l border-slate-200" colSpan={4}>Edgebanding (T B L R)</th>
                       <th className="p-4 w-32 border-l border-slate-200">Edge Rate</th>
@@ -159,9 +181,9 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                         <td className="p-3"><input type="text" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 shadow-sm" value={c.name} onChange={e => { const arr = [...project.sheetComponents]; arr[idx].name = e.target.value; updateProj({ sheetComponents: arr }); }} placeholder="Name" /></td>
                         <td className="p-3"><input type="number" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 text-center shadow-sm" value={c.qty} onChange={e => { const arr = [...project.sheetComponents]; arr[idx].qty = Number(e.target.value); updateProj({ sheetComponents: arr }); }} /></td>
                         <td className="p-3 flex items-center justify-center gap-1">
-                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 text-center shadow-sm" value={c.l || ''} onChange={e => { const arr = [...project.sheetComponents]; arr[idx].l = Number(e.target.value); updateProj({ sheetComponents: arr }); }} placeholder="L" />
+                          <input type="number" className="w-20 p-2 border border-slate-200 rounded-md outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 text-center shadow-sm" value={c.l || ''} onChange={e => { const arr = [...project.sheetComponents]; arr[idx].l = Number(e.target.value); updateProj({ sheetComponents: arr }); }} placeholder={`L (${project.dimensionUnit || 'mm'})`} />
                           <span className="text-slate-400 text-xs">×</span>
-                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 text-center shadow-sm" value={c.w || ''} onChange={e => { const arr = [...project.sheetComponents]; arr[idx].w = Number(e.target.value); updateProj({ sheetComponents: arr }); }} placeholder="W" />
+                          <input type="number" className="w-20 p-2 border border-slate-200 rounded-md outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 text-center shadow-sm" value={c.w || ''} onChange={e => { const arr = [...project.sheetComponents]; arr[idx].w = Number(e.target.value); updateProj({ sheetComponents: arr }); }} placeholder={`W (${project.dimensionUnit || 'mm'})`} />
                         </td>
                         <td className="p-3">
                           <select className="w-full p-2 border border-slate-200 rounded-md outline-none text-xs focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 shadow-sm" value={c.rateId} onChange={e => { const arr = [...project.sheetComponents]; arr[idx].rateId = e.target.value; updateProj({ sheetComponents: arr }); }}>
@@ -214,7 +236,7 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                     <tr className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
                       <th className="p-4 w-48">Component</th>
                       <th className="p-4 w-16 text-center">Qty</th>
-                      <th className="p-4 w-48 text-center">Size (L×W×T)</th>
+                      <th className="p-4 w-48 text-center">Size (L×W×T) in {project.dimensionUnit || 'mm'}</th>
                       <th className="p-4">Wood Type (Auto-Slab)</th>
                       <th className="p-4 text-right w-24">Calc Rate</th>
                       <th className="p-4 text-right w-32">Cost</th>
@@ -229,11 +251,11 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                         <td className="p-3"><input type="text" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 shadow-sm" value={c.name} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].name = e.target.value; updateProj({ solidWoodComponents: arr }); }} placeholder="Name" /></td>
                         <td className="p-3"><input type="number" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-center shadow-sm" value={c.qty} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].qty = Number(e.target.value); updateProj({ solidWoodComponents: arr }); }} /></td>
                         <td className="p-3 flex items-center justify-center gap-1">
-                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-center shadow-sm" value={c.l || ''} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].l = Number(e.target.value); updateProj({ solidWoodComponents: arr }); }} placeholder="L" />
+                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-center shadow-sm" value={c.l || ''} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].l = Number(e.target.value); updateProj({ solidWoodComponents: arr }); }} placeholder={`L (${project.dimensionUnit || 'mm'})`} />
                           <span className="text-slate-400 text-xs">×</span>
-                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-center shadow-sm" value={c.w || ''} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].w = Number(e.target.value); updateProj({ solidWoodComponents: arr }); }} placeholder="W" />
+                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-center shadow-sm" value={c.w || ''} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].w = Number(e.target.value); updateProj({ solidWoodComponents: arr }); }} placeholder={`W (${project.dimensionUnit || 'mm'})`} />
                           <span className="text-slate-400 text-xs">×</span>
-                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-center shadow-sm" value={c.t || ''} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].t = Number(e.target.value); updateProj({ solidWoodComponents: arr }); }} placeholder="T" />
+                          <input type="number" className="w-16 p-2 border border-slate-200 rounded-md outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-center shadow-sm" value={c.t || ''} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].t = Number(e.target.value); updateProj({ solidWoodComponents: arr }); }} placeholder={`T (${project.dimensionUnit || 'mm'})`} />
                         </td>
                         <td className="p-3">
                           <select className="w-full p-2 border border-slate-200 rounded-md outline-none text-xs focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 shadow-sm" value={c.woodTypeId} onChange={e => { const arr = [...project.solidWoodComponents]; arr[idx].woodTypeId = e.target.value; updateProj({ solidWoodComponents: arr }); }}>
@@ -302,6 +324,103 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
               </table>
             </section>
 
+            {/* Finishing */}
+            <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+                <div className="flex items-center gap-2">
+                  <Paintbrush className="text-purple-500" size={18} />
+                  <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Finishing (Polish / Paint)</h2>
+                </div>
+                <button 
+                  onClick={() => updateProj({ finishing: [...project.finishing, { id: uuidv4(), name: '', areaSqFt: 0, rateId: '' }] })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-bold hover:bg-purple-100 transition-colors"
+                >
+                  <Plus size={14} /> Add Finishing
+                </button>
+              </div>
+              
+              <table className="w-full text-left text-sm">
+                 <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                    <tr>
+                      <th className="p-4">Surface / Item</th>
+                      <th className="p-4 w-28 text-center">Area (sq.ft)</th>
+                      <th className="p-4">Rate Master</th>
+                      <th className="p-4 text-right w-32">Total</th>
+                      <th className="p-4 w-12"></th>
+                    </tr>
+                 </thead>
+                 <tbody>
+                    {project.finishing.map((c, idx) => (
+                      <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                         <td className="p-3"><input type="text" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 shadow-sm" value={c.name} onChange={e => { const arr = [...project.finishing]; arr[idx].name = e.target.value; updateProj({ finishing: arr }); }} placeholder="e.g. PU Polish - Top" /></td>
+                         <td className="p-3"><input type="number" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 text-center shadow-sm" value={c.areaSqFt} onChange={e => { const arr = [...project.finishing]; arr[idx].areaSqFt = Number(e.target.value); updateProj({ finishing: arr }); }} /></td>
+                         <td className="p-3">
+                            <select className="w-full p-2 border border-slate-200 rounded-md outline-none text-xs focus:border-purple-400 focus:ring-1 focus:ring-purple-400 shadow-sm" value={c.rateId} onChange={e => { const arr = [...project.finishing]; arr[idx].rateId = e.target.value; updateProj({ finishing: arr }); }}>
+                              <option value="">Select Rate...</option>
+                              {finishingRates.map(r => <option key={r.id} value={r.id}>{r.name} (₹{r.rate}/{r.unit})</option>)}
+                            </select>
+                         </td>
+                         <td className="p-3 text-right font-mono font-bold text-slate-800">₹{results.breakdown.finishing[idx]?.cost.toFixed(0)}</td>
+                         <td className="p-3 text-center"><button onClick={() => updateProj({ finishing: project.finishing.filter((_, i) => i !== idx) })} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={18}/></button></td>
+                      </tr>
+                    ))}
+                    {project.finishing.length === 0 && (
+                      <tr><td colSpan={5} className="p-10 text-center text-slate-400 text-sm font-medium">No finishing added.</td></tr>
+                    )}
+                 </tbody>
+              </table>
+            </section>
+
+            {/* Labour */}
+            <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+                <div className="flex items-center gap-2">
+                  <HardHat className="text-blue-500" size={18} />
+                  <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Labour & Services</h2>
+                </div>
+                <button 
+                  onClick={() => updateProj({ labour: [...project.labour, { id: uuidv4(), name: '', type: 'hour', qty: 1, rate: 0 }] })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors"
+                >
+                  <Plus size={14} /> Add Labour
+                </button>
+              </div>
+              
+              <table className="w-full text-left text-sm">
+                 <thead className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                    <tr>
+                      <th className="p-4">Description</th>
+                      <th className="p-4 w-36">Type</th>
+                      <th className="p-4 w-24 text-center">Qty</th>
+                      <th className="p-4 w-32 text-right">Rate / %</th>
+                      <th className="p-4 text-right w-32">Total</th>
+                      <th className="p-4 w-12"></th>
+                    </tr>
+                 </thead>
+                 <tbody>
+                    {project.labour.map((c, idx) => (
+                      <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                         <td className="p-3"><input type="text" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 shadow-sm" value={c.name} onChange={e => { const arr = [...project.labour]; arr[idx].name = e.target.value; updateProj({ labour: arr }); }} placeholder="e.g. Assembly / Carpentry" /></td>
+                         <td className="p-3">
+                            <select className="w-full p-2 border border-slate-200 rounded-md outline-none text-xs focus:border-blue-400 focus:ring-1 focus:ring-blue-400 shadow-sm" value={c.type} onChange={e => { const arr = [...project.labour]; arr[idx].type = e.target.value as any; updateProj({ labour: arr }); }}>
+                              <option value="hour">Per Hour</option>
+                              <option value="item">Per Item/Job</option>
+                              <option value="percent_material">% of Material</option>
+                            </select>
+                         </td>
+                         <td className="p-3"><input type="number" disabled={c.type === 'percent_material'} className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-center shadow-sm disabled:bg-slate-100 disabled:text-slate-400" value={c.qty} onChange={e => { const arr = [...project.labour]; arr[idx].qty = Number(e.target.value); updateProj({ labour: arr }); }} /></td>
+                         <td className="p-3"><input type="number" className="w-full p-2 border border-slate-200 rounded-md outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-right shadow-sm" value={c.rate} onChange={e => { const arr = [...project.labour]; arr[idx].rate = Number(e.target.value); updateProj({ labour: arr }); }} /></td>
+                         <td className="p-3 text-right font-mono font-bold text-slate-800">₹{results.breakdown.labour[idx]?.cost.toFixed(0)}</td>
+                         <td className="p-3 text-center"><button onClick={() => updateProj({ labour: project.labour.filter((_, i) => i !== idx) })} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={18}/></button></td>
+                      </tr>
+                    ))}
+                    {project.labour.length === 0 && (
+                      <tr><td colSpan={6} className="p-10 text-center text-slate-400 text-sm font-medium">No labour costs added.</td></tr>
+                    )}
+                 </tbody>
+              </table>
+            </section>
+
           </div>
         </main>
         
@@ -328,6 +447,7 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                  <div className="flex justify-between text-slate-600"><span>Solid Wood</span><span className="text-slate-900">₹{results.totals.solidWoodCost.toFixed(0)}</span></div>
                  <div className="flex justify-between text-slate-600"><span>Edge Banding</span><span className="text-slate-900">₹{results.totals.edgeBandCost.toFixed(0)}</span></div>
                  <div className="flex justify-between text-slate-600"><span>Hardware</span><span className="text-slate-900">₹{results.totals.hardwareCost.toFixed(0)}</span></div>
+                 <div className="flex justify-between text-slate-600"><span>Finishing</span><span className="text-slate-900">₹{results.totals.finishingCost.toFixed(0)}</span></div>
                  <div className="flex justify-between text-orange-600/80 border-b border-slate-200 pb-3"><span>+ Wastage ({settings.pricing.wastagePercent}%)</span><span>₹{results.totals.wastageCost.toFixed(0)}</span></div>
                  <div className="flex justify-between font-bold text-slate-900 pt-1"><span>Total Material</span><span>₹{results.totals.totalMaterialCost.toFixed(0)}</span></div>
                  

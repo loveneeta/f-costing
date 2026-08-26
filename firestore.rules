@@ -1,0 +1,239 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ====== CORE HELPERS ======
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // User context
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function currentUserRole() {
+      let u = currentUser();
+      return u != null ? u.role : null;
+    }
+    function currentTenantId() {
+      let u = currentUser();
+      return u != null ? u.tenantId : null;
+    }
+    
+    // Role Definitions
+    function isSuperAdmin() {
+      let u = currentUser();
+      // Super Admin: role == 'super_admin' AND tenantId == null
+      return isSignedIn() && u != null && u.role == 'super_admin' && (!('tenantId' in u) || u.tenantId == null);
+    }
+    function isCompanyAdmin(tenantId) {
+      return isSignedIn() && currentTenantId() == tenantId && currentUserRole() == 'company_admin';
+    }
+    function isTenantMember(tenantId) {
+      return isSignedIn() && currentTenantId() == tenantId && currentTenantId() != null;
+    }
+    function hasPermission(permission) {
+      let u = currentUser();
+      return u != null && permission in u.permissions;
+    }
+
+    // ====== USERS ======
+    function isValidUserCreate(data) {
+      return data.keys().hasAll(['email', 'name', 'role', 'status', 'createdAt'])
+        && data.email is string && data.email.size() <= 200
+        && data.name is string && data.name.size() <= 200
+        && data.role in ['company_admin', 'manager', 'employee'] // NOT super_admin
+        && data.status in ['active', 'inactive', 'suspended']
+        && data.createdAt is string
+        && (!('isSuperAdmin' in data) || data.isSuperAdmin == false);
+    }
+
+    match /users/{userId} {
+      // Read: Self, SuperAdmin, or Member of the same tenant
+      allow read: if isSignedIn() && (
+        isOwner(userId) 
+        || isSuperAdmin()
+        || (resource != null && isTenantMember(resource.data.tenantId))
+      );
+      
+      // Create: Owner creating themselves (via invite flow - role restricted), SuperAdmin, or CompanyAdmin
+      allow create: if isSignedIn() && isValidId(userId) && (
+        (isSuperAdmin()) ||
+        (isCompanyAdmin(incoming().tenantId) && isValidUserCreate(incoming())) ||
+        // If owner creates their own doc, they must not be super_admin. We rely on the trusted invite logic or UI constraints for tenantId matching since we don't have a backend.
+        (isOwner(userId) && isValidUserCreate(incoming()))
+      );
+
+      // Update: Self (profile only), Company Admin (their tenant users, not to super_admin), Super Admin (all)
+      allow update: if isSignedIn() && isValidId(userId) && (
+        isSuperAdmin() ||
+        (
+          isCompanyAdmin(resource.data.tenantId) 
+          && incoming().tenantId == resource.data.tenantId 
+          && incoming().role != 'super_admin'
+          && (!('isSuperAdmin' in incoming()) || incoming().isSuperAdmin == false)
+        ) ||
+        (
+          isOwner(userId) 
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'designation'])
+        )
+      );
+
+      function isValidSession(data) {
+        return data.keys().hasAll(['userAgent', 'loginTime', 'lastActivity', 'status'])
+          && data.userAgent is string && data.userAgent.size() <= 500
+          && data.loginTime is string
+          && data.lastActivity is string
+          && data.status in ['active', 'revoked'];
+      }
+      match /sessions/{sessionId} {
+        allow read: if isOwner(userId) || isSuperAdmin();
+        allow create: if isOwner(userId) && isValidId(sessionId) && isValidSession(incoming());
+        allow update: if isOwner(userId) && isValidId(sessionId) && isValidSession(incoming())
+          && incoming().diff(existing()).affectedKeys().hasAny(['lastActivity', 'status']);
+      }
+    }
+
+    // ====== TENANTS ======
+    function isValidTenant(data) {
+      return data.keys().hasAll(['name', 'email', 'status', 'subscriptionPlan', 'createdAt'])
+        && data.name is string && data.name.size() <= 200
+        && data.email is string && data.email.size() <= 200
+        && data.status in ['active', 'inactive', 'suspended', 'trial', 'cancelled'];
+    }
+
+    match /tenants/{tenantId} {
+      allow read: if isSuperAdmin() || isTenantMember(tenantId);
+      allow create: if isSuperAdmin() && isValidId(tenantId) && isValidTenant(incoming());
+      
+      allow update: if isValidId(tenantId) && (
+        isSuperAdmin() || 
+        (
+          isCompanyAdmin(tenantId) && 
+          !incoming().diff(existing()).affectedKeys().hasAny(['status', 'subscriptionPlan', 'createdBy', 'adminUserId', 'environment'])
+        )
+      );
+      
+      allow delete: if isSuperAdmin() && resource.data.environment == 'test';
+    }
+    
+    // ====== SUBSCRIPTIONS & PLANS ======
+    match /subscription_plans/{planId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
+    }
+    
+    match /subscriptions/{subId} {
+      allow read: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
+      allow write: if isSuperAdmin();
+    }
+    
+    // ====== PAYMENTS & INVOICES ======
+    match /payments/{paymentId} {
+      allow read: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
+      allow write: if isSuperAdmin();
+    }
+    match /invoices/{invoiceId} {
+      allow read: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
+      allow write: if isSuperAdmin();
+    }
+    
+    // ====== PLATFORM SETTINGS ======
+    match /platform_settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    // ====== INVITATIONS ======
+    function isValidInvitation(data) {
+      return data.keys().hasAll(['tenantId', 'email', 'role', 'tokenHash', 'status', 'expiresAt', 'createdAt'])
+        && data.email is string && data.email.size() <= 200
+        && data.status in ['pending', 'accepted', 'revoked', 'expired']
+        && data.tokenHash is string && data.tokenHash.size() <= 200
+        && data.role != 'super_admin';
+    }
+
+    match /invitations/{invitationId} {
+      // Read: SuperAdmin, or CompanyAdmin of the tenant, OR the user who just signed up reading their own invite
+      allow read: if isSuperAdmin() || 
+                  (resource != null && isCompanyAdmin(resource.data.tenantId)) ||
+                  (isSignedIn() && request.auth.token.email == resource.data.email);
+                  
+      allow create: if isSignedIn() && isValidId(invitationId) && isValidInvitation(incoming()) && (
+        isSuperAdmin() || isCompanyAdmin(incoming().tenantId)
+      );
+      
+      allow update: if isValidId(invitationId) && isValidInvitation(incoming()) && (
+        isSuperAdmin() || 
+        (resource != null && isCompanyAdmin(resource.data.tenantId) && incoming().tenantId == resource.data.tenantId) ||
+        // User accepting the invite can only update the status
+        (isSignedIn() && request.auth.token.email == resource.data.email && incoming().diff(existing()).affectedKeys().hasOnly(['status']))
+      );
+    }
+
+    // ====== AUDIT LOGS ======
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['action', 'entityType', 'entityId', 'timestamp'])
+        && data.action is string && data.action.size() <= 200
+        && data.entityType is string && data.entityType.size() <= 200
+        && data.entityId is string && data.entityId.size() <= 128;
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isSuperAdmin() || (
+        resource != null && isTenantMember(resource.data.tenantId) && (isCompanyAdmin(resource.data.tenantId) || hasPermission('audit.view'))
+      );
+      allow create: if isSignedIn() && isValidId(logId) && isValidAuditLog(incoming()) && (
+        isSuperAdmin() || incoming().tenantId == currentTenantId()
+      );
+      allow update, delete: if false; 
+    }
+    
+    // ====== FAILED LOGINS ======
+    match /failed_logins/{logId} {
+      allow create: if isValidId(logId) && incoming().keys().hasAll(['email', 'timestamp']) 
+        && incoming().email is string && incoming().email.size() <= 200;
+      allow read, update, delete: if false;
+    }
+
+    // ====== BUSINESS COLLECTIONS ======
+    match /projects/{docId} {
+      allow read, delete: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
+      allow create: if isValidId(docId) && (isSuperAdmin() || (incoming().tenantId == currentTenantId() && isTenantMember(currentTenantId())));
+      allow update: if isValidId(docId) && (isSuperAdmin() || (
+        resource != null && isTenantMember(resource.data.tenantId) && 
+        incoming().tenantId == resource.data.tenantId
+      ));
+    }
+    match /rates/{docId} {
+      allow read, delete: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
+      allow create: if isValidId(docId) && (isSuperAdmin() || (incoming().tenantId == currentTenantId() && isTenantMember(currentTenantId())));
+      allow update: if isValidId(docId) && (isSuperAdmin() || (
+        resource != null && isTenantMember(resource.data.tenantId) && 
+        incoming().tenantId == resource.data.tenantId
+      ));
+    }
+    match /woodTypes/{docId} {
+      allow read, delete: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
+      allow create: if isValidId(docId) && (isSuperAdmin() || (incoming().tenantId == currentTenantId() && isTenantMember(currentTenantId())));
+      allow update: if isValidId(docId) && (isSuperAdmin() || (
+        resource != null && isTenantMember(resource.data.tenantId) && 
+        incoming().tenantId == resource.data.tenantId
+      ));
+    }
+    match /settings/{docId} {
+      allow read: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
+      allow delete: if isSuperAdmin() || (resource != null && isCompanyAdmin(resource.data.tenantId));
+      allow create: if isValidId(docId) && (isSuperAdmin() || (incoming().tenantId == currentTenantId() && isCompanyAdmin(currentTenantId())));
+      allow update: if isValidId(docId) && (isSuperAdmin() || (
+        resource != null && isCompanyAdmin(resource.data.tenantId) && 
+        incoming().tenantId == resource.data.tenantId
+      ));
+    }
+  }
+}

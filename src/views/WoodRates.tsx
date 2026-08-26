@@ -3,6 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { WoodType, WoodRange } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Trash2, Save, TreePine } from 'lucide-react';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export function WoodRates() {
   const { woodTypes, addWoodType, updateWoodType, deleteWoodType } = useStore();
@@ -38,9 +39,10 @@ export function WoodRates() {
   );
 }
 
-function WoodTypeCard({ wood: initialWood }: { wood: WoodType }) {
+function WoodTypeCard({ wood: initialWood }: { wood: WoodType; key?: string }) {
   const { updateWoodType, deleteWoodType } = useStore();
   const [wood, setWood] = useState<WoodType>(initialWood);
+  const [showConfirm, setShowConfirm] = useState(false);
   
   // Track changes locally, save on blur/button
   const handleChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +94,7 @@ function WoodTypeCard({ wood: initialWood }: { wood: WoodType }) {
             className="font-bold text-lg text-neutral-900 bg-transparent outline-none focus:border-b-2 focus:border-emerald-500 w-full"
           />
         </div>
-        <button onClick={() => deleteWoodType(wood.id)} className="text-neutral-400 hover:text-red-500 ml-4 p-2">
+        <button onClick={() => setShowConfirm(true)} className="text-neutral-400 hover:text-red-500 ml-4 p-2">
           <Trash2 size={18} />
         </button>
       </div>
@@ -158,6 +160,16 @@ function WoodTypeCard({ wood: initialWood }: { wood: WoodType }) {
           Save Changes
         </button>
       </div>
+
+      {showConfirm && (
+        <ConfirmModal
+          title="Delete Wood Type"
+          message={`Are you sure you want to delete ${wood.name}? This action cannot be undone.`}
+          confirmText="Delete"
+          onConfirm={() => deleteWoodType(wood.id)}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
     </div>
   );
 }

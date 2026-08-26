@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Project } from '../types';
 import { calculateProjectCost } from '../engine';
 import { Edit2, Trash2, Copy } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Props {
   onEdit: (p: Project) => void;
@@ -11,6 +12,7 @@ interface Props {
 
 export function CostingsList({ onEdit }: Props) {
   const { projects, deleteProject, addProject, rates, settings, woodTypes } = useStore();
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   
   const regularProjects = projects.filter(p => !p.isTemplate);
 
@@ -41,7 +43,7 @@ export function CostingsList({ onEdit }: Props) {
                 <tr>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Item Name</th>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Category</th>
-                  <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Size (mm)</th>
+                  <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Size</th>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider text-right">Selling Price</th>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider text-center">Last Modified</th>
                   <th className="p-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider text-center">Actions</th>
@@ -57,7 +59,7 @@ export function CostingsList({ onEdit }: Props) {
                         {p.subName && <div className="text-xs text-neutral-500 mt-0.5">{p.subName}</div>}
                       </td>
                       <td className="p-4 text-neutral-600 text-sm">{p.category || '-'}</td>
-                      <td className="p-4 text-neutral-600 text-sm">{p.overallL} × {p.overallW} × {p.overallH}</td>
+                      <td className="p-4 text-neutral-600 text-sm">{p.overallL} × {p.overallW} × {p.overallH} {p.dimensionUnit || 'mm'}</td>
                       <td className="p-4 text-right font-mono font-bold text-emerald-600">₹{results.totals.grandTotal.toFixed(0)}</td>
                       <td className="p-4 text-neutral-500 text-sm text-center">{new Date(p.dateModified).toLocaleDateString()}</td>
                       <td className="p-4 flex justify-center gap-2">
@@ -67,7 +69,7 @@ export function CostingsList({ onEdit }: Props) {
                         <button onClick={() => handleDuplicate(p)} className="p-2 text-neutral-600 hover:bg-neutral-200 rounded-lg transition-colors" title="Duplicate">
                           <Copy size={16} />
                         </button>
-                        <button onClick={() => { if(confirm('Are you sure you want to delete this costing?')) deleteProject(p.id) }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                        <button onClick={() => setProjectToDelete(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       </td>
@@ -79,6 +81,19 @@ export function CostingsList({ onEdit }: Props) {
           </div>
         )}
       </div>
+
+      {projectToDelete && (
+        <ConfirmModal
+          title="Delete Costing"
+          message="Are you sure you want to delete this costing project? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={() => {
+            deleteProject(projectToDelete);
+            setProjectToDelete(null);
+          }}
+          onCancel={() => setProjectToDelete(null)}
+        />
+      )}
     </div>
   );
 }

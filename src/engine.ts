@@ -4,24 +4,36 @@ import { Project, RateItem, SheetComponent, SolidWoodComponent, HardwareComponen
 const SQ_FT_DIVISOR = 92903.04; // 1 sq.ft = 92903.04 mm2
 const CU_FT_DIVISOR = 28316846.592; // 1 cu.ft = 28,316,846.592 mm3
 
+const UNIT_MULTIPLIERS = {
+  mm: 1,
+  cm: 10,
+  inch: 25.4,
+  ft: 304.8,
+  m: 1000
+};
+
 export function calculateProjectCost(project: Project, rateMaster: RateItem[], pricing: PricingSettings, woodTypes: WoodType[]) {
   const getRate = (id: string) => rateMaster.find(r => r.id === id)?.rate || 0;
+  
+  const mult = UNIT_MULTIPLIERS[project.dimensionUnit || 'mm'];
 
   // 1. Sheet Materials & Edge Banding
   let totalSheetCost = 0;
   let totalEdgeBandCost = 0;
   const sheetBreakdown = project.sheetComponents.map(comp => {
+    const l_mm = comp.l * mult;
+    const w_mm = comp.w * mult;
     // Area in sq.ft
-    const area = (comp.l * comp.w) / SQ_FT_DIVISOR;
+    const area = (l_mm * w_mm) / SQ_FT_DIVISOR;
     const rate = getRate(comp.rateId);
     const cost = area * comp.qty * rate;
     
     // Edgebanding in rmt (running meter)
     let edgeLengthMm = 0;
-    if (comp.edgeTop) edgeLengthMm += comp.l;
-    if (comp.edgeBottom) edgeLengthMm += comp.l;
-    if (comp.edgeLeft) edgeLengthMm += comp.w;
-    if (comp.edgeRight) edgeLengthMm += comp.w;
+    if (comp.edgeTop) edgeLengthMm += l_mm;
+    if (comp.edgeBottom) edgeLengthMm += l_mm;
+    if (comp.edgeLeft) edgeLengthMm += w_mm;
+    if (comp.edgeRight) edgeLengthMm += w_mm;
     
     const edgeRmt = edgeLengthMm / 1000;
     const edgeRate = getRate(comp.edgeRateId);
@@ -36,10 +48,14 @@ export function calculateProjectCost(project: Project, rateMaster: RateItem[], p
   // 2. Solid Wood
   let totalSolidWoodCost = 0;
   const solidWoodBreakdown = project.solidWoodComponents.map(comp => {
-    const vol = (comp.l * comp.w * comp.t) / CU_FT_DIVISOR;
+    const l_mm = comp.l * mult;
+    const w_mm = comp.w * mult;
+    const t_mm = comp.t * mult;
+    
+    const vol = (l_mm * w_mm * t_mm) / CU_FT_DIVISOR;
     
     // Find rate based on length in feet
-    const lengthFt = comp.l / 304.8;
+    const lengthFt = l_mm / 304.8;
     const wood = woodTypes.find(w => w.id === comp.woodTypeId);
     let rate = 0;
     

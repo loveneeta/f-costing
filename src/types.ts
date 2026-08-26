@@ -106,6 +106,7 @@ export interface Project {
   name: string;
   subName?: string;
   category: string;
+  dimensionUnit?: 'mm' | 'cm' | 'inch' | 'ft' | 'm';
   overallL: number;
   overallW: number;
   overallH: number;

@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { collection, query, where, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 import { Project, RateItem, AppSettings, WoodType, WoodRange } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -78,63 +81,140 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const { appUser } = useAuth();
+  const tenantId = appUser?.role === 'super_admin' ? null : appUser?.tenantId;
   const [projects, setProjects] = useState<Project[]>([]);
   const [rates, setRates] = useState<RateItem[]>([]);
   const [woodTypes, setWoodTypes] = useState<WoodType[]>([]);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  
+  const initialLoadDone = useRef(false);
+
   useEffect(() => {
-    const savedProjects = localStorage.getItem('furniture_projects');
-    const savedRates = localStorage.getItem('furniture_rates');
-    const savedWoodTypes = localStorage.getItem('furniture_wood_types');
-    const savedSettings = localStorage.getItem('furniture_settings');
-    
-    if (savedProjects) setProjects(JSON.parse(savedProjects));
-    
-    if (savedRates) {
-      setRates(JSON.parse(savedRates));
-    } else {
+    if (!tenantId) {
+      setProjects([]);
       setRates(DEFAULT_RATES);
-    }
-
-    if (savedWoodTypes) {
-      setWoodTypes(JSON.parse(savedWoodTypes));
-    } else {
       setWoodTypes(DEFAULT_WOOD_TYPES);
+      setSettings(DEFAULT_SETTINGS);
+      setIsLoaded(true);
+      return;
     }
 
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-    
-    setIsLoaded(true);
-  }, []);
+    const loadData = async () => {
+      try {
+        const [projSnap, ratesSnap, woodSnap, setSnap] = await Promise.all([
+          getDocs(query(collection(db, 'projects'), where('tenantId', '==', tenantId))),
+          getDocs(query(collection(db, 'rates'), where('tenantId', '==', tenantId))),
+          getDocs(query(collection(db, 'woodTypes'), where('tenantId', '==', tenantId))),
+          getDocs(query(collection(db, 'settings'), where('tenantId', '==', tenantId)))
+        ]);
 
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('furniture_projects', JSON.stringify(projects));
-      localStorage.setItem('furniture_rates', JSON.stringify(rates));
-      localStorage.setItem('furniture_wood_types', JSON.stringify(woodTypes));
-      localStorage.setItem('furniture_settings', JSON.stringify(settings));
-    }
-  }, [projects, rates, woodTypes, settings, isLoaded]);
+        const loadedProjects = projSnap.docs.map(d => d.data() as Project);
+        const loadedRates = ratesSnap.docs.map(d => d.data() as RateItem);
+        const loadedWoodTypes = woodSnap.docs.map(d => d.data() as WoodType);
+        
+        setProjects(loadedProjects);
+        setRates(loadedRates.length ? loadedRates : DEFAULT_RATES);
+        setWoodTypes(loadedWoodTypes.length ? loadedWoodTypes : DEFAULT_WOOD_TYPES);
+        
+        if (!setSnap.empty) {
+          setSettings(setSnap.docs[0].data() as AppSettings);
+        } else {
+          setSettings(DEFAULT_SETTINGS);
+        }
+      } catch (err) {
+        console.error("Error loading store from Firestore", err);
+        setRates(DEFAULT_RATES);
+        setWoodTypes(DEFAULT_WOOD_TYPES);
+        setSettings(DEFAULT_SETTINGS);
+      } finally {
+        setIsLoaded(true);
+        initialLoadDone.current = true;
+      }
+    };
 
-  const addProject = (p: Project) => setProjects(prev => [...prev, p]);
-  const updateProject = (p: Project) => setProjects(prev => prev.map(proj => proj.id === p.id ? p : proj));
-  const deleteProject = (id: string) => setProjects(prev => prev.filter(proj => proj.id !== id));
+    loadData();
+  }, [tenantId]);
 
-  const addRate = (r: RateItem) => setRates(prev => [...prev, r]);
-  const updateRate = (r: RateItem) => setRates(prev => prev.map(rate => rate.id === r.id ? r : rate));
-  const deleteRate = (id: string) => setRates(prev => prev.filter(rate => rate.id !== id));
+  const addProject = async (p: Project) => {
+    if (!tenantId) return;
+    const data = { ...p, tenantId };
+    setProjects(prev => [...prev, data]);
+    await setDoc(doc(db, 'projects', p.id), data);
+  };
+
+  const updateProject = async (p: Project) => {
+    if (!tenantId) return;
+    const data = { ...p, tenantId };
+    setProjects(prev => prev.map(proj => proj.id === p.id ? data : proj));
+    await setDoc(doc(db, 'projects', p.id), data);
+  };
+
+  const deleteProject = async (id: string) => {
+    if (!tenantId) return;
+    setProjects(prev => prev.filter(proj => proj.id !== id));
+    await deleteDoc(doc(db, 'projects', id));
+  };
+
+  const addRate = async (r: RateItem) => {
+    if (!tenantId) return;
+    const data = { ...r, tenantId };
+    setRates(prev => [...prev, data]);
+    await setDoc(doc(db, 'rates', r.id), data);
+  };
+
+  const updateRate = async (r: RateItem) => {
+    if (!tenantId) return;
+    const data = { ...r, tenantId };
+    setRates(prev => prev.map(rate => rate.id === r.id ? data : rate));
+    await setDoc(doc(db, 'rates', r.id), data);
+  };
+
+  const deleteRate = async (id: string) => {
+    if (!tenantId) return;
+    setRates(prev => prev.filter(rate => rate.id !== id));
+    await deleteDoc(doc(db, 'rates', id));
+  };
   
-  const addWoodType = (w: WoodType) => setWoodTypes(prev => [...prev, w]);
-  const updateWoodType = (w: WoodType) => setWoodTypes(prev => prev.map(wt => wt.id === w.id ? w : wt));
-  const deleteWoodType = (id: string) => setWoodTypes(prev => prev.filter(wt => wt.id !== id));
-  
-  const updateSettings = (s: AppSettings) => setSettings(s);
+  const addWoodType = async (w: WoodType) => {
+    if (!tenantId) return;
+    const data = { ...w, tenantId };
+    setWoodTypes(prev => [...prev, data]);
+    await setDoc(doc(db, 'woodTypes', w.id), data);
+  };
 
-  if (!isLoaded) return null;
+  const updateWoodType = async (w: WoodType) => {
+    if (!tenantId) return;
+    const data = { ...w, tenantId };
+    setWoodTypes(prev => prev.map(wt => wt.id === w.id ? data : wt));
+    await setDoc(doc(db, 'woodTypes', w.id), data);
+  };
+
+  const deleteWoodType = async (id: string) => {
+    if (!tenantId) return;
+    setWoodTypes(prev => prev.filter(wt => wt.id !== id));
+    await deleteDoc(doc(db, 'woodTypes', id));
+  };
+  
+  const updateSettings = async (s: AppSettings) => {
+    if (!tenantId) return;
+    setSettings(s);
+    await setDoc(doc(db, 'settings', tenantId), { ...s, tenantId });
+  };
+
+
+  if (!isLoaded) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-neutral-100 font-sans text-neutral-500">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium">Loading workspace data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <StoreContext.Provider value={{ projects, rates, woodTypes, settings, addProject, updateProject, deleteProject, addRate, updateRate, deleteRate, addWoodType, updateWoodType, deleteWoodType, updateSettings }}>
