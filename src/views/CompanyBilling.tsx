@@ -94,66 +94,74 @@ export const CompanyBilling: React.FC = () => {
   }, [tenant]);
 
   if (tenantLoading || loading) {
-    return <div className="p-8">Loading billing information...</div>;
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center min-h-[50vh] text-slate-500 text-sm">
+        Loading billing information...
+      </div>
+    );
   }
 
   if (!tenant) return null;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-neutral-900 mb-8">Billing & Subscription</h1>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto pb-16">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Billing & Subscription</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          Manage your plan, limits, and view payment history.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-2 space-y-8">
-          <section className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
-            <div className="p-6 border-b border-neutral-100 flex justify-between items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8">
+        <div className="lg:col-span-2 space-y-6">
+          <section className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
-                <h2 className="text-lg font-bold text-neutral-900 mb-1">Current Plan: {plan?.name || 'Free Tier'}</h2>
-                <p className="text-sm text-neutral-500">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-0.5">Current Plan: {plan?.name || 'Free Tier'}</h2>
+                <p className="text-xs sm:text-sm text-slate-500">
                   {subscription ? `Status: ${subscription.status}` : 'No active subscription'}
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold">₹{plan?.price || 0}</div>
-                <div className="text-sm text-neutral-500">/{plan?.billingInterval || 'month'}</div>
+              <div className="sm:text-right">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900">₹{plan?.price || 0}</div>
+                <div className="text-xs text-slate-500">/{plan?.billingInterval || 'month'}</div>
               </div>
             </div>
-            <div className="p-6 bg-neutral-50 flex gap-4 items-center justify-between">
-              <div className="text-sm text-neutral-700 flex items-center gap-2">
-                <CreditCard size={16} className="text-neutral-400" />
+            <div className="p-4 sm:p-6 bg-slate-50 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+              <div className="text-xs sm:text-sm text-slate-700 flex items-center gap-2">
+                <CreditCard size={16} className="text-slate-400 shrink-0" />
                 <span>Next renewal: {subscription?.renewalDate ? new Date(subscription.renewalDate).toLocaleDateString() : 'N/A'}</span>
               </div>
               
               <button 
                 onClick={() => setShowPlanModal(true)}
-                className="bg-white border border-neutral-300 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-neutral-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center bg-white border border-slate-300 text-slate-700 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 shadow-sm transition-colors"
               >
                 Manage Subscription
               </button>
-
             </div>
           </section>
 
-          <section className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
-            <div className="p-6 border-b border-neutral-100">
-              <h2 className="text-lg font-bold text-neutral-900">Usage & Limits</h2>
+          <section className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-4 sm:p-6 border-b border-slate-100">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">Usage & Limits</h2>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-5">
               <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium text-neutral-700">Users</span>
-                  <span className="text-neutral-500">Limit: {plan?.limits?.users || 'Unlimited'}</span>
+                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
+                  <span className="font-medium text-slate-700">Users</span>
+                  <span className="text-slate-500">Limit: {plan?.limits?.users || 'Unlimited'}</span>
                 </div>
-                <div className="w-full bg-neutral-100 rounded-full h-2">
+                <div className="w-full bg-slate-100 rounded-full h-2">
                   <div className="bg-blue-600 h-2 rounded-full" style={{ width: '20%' }}></div>
                 </div>
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium text-neutral-700">Employees</span>
-                  <span className="text-neutral-500">Limit: {plan?.limits?.employees || 'Unlimited'}</span>
+                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
+                  <span className="font-medium text-slate-700">Employees</span>
+                  <span className="text-slate-500">Limit: {plan?.limits?.employees || 'Unlimited'}</span>
                 </div>
-                <div className="w-full bg-neutral-100 rounded-full h-2">
+                <div className="w-full bg-slate-100 rounded-full h-2">
                   <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '45%' }}></div>
                 </div>
               </div>
@@ -161,25 +169,25 @@ export const CompanyBilling: React.FC = () => {
           </section>
         </div>
 
-        <div className="space-y-8">
-          <section className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 className="text-lg font-bold text-neutral-900 mb-4">Payment History</h2>
+        <div className="space-y-6">
+          <section className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-4">Payment History</h2>
             {payments.length === 0 ? (
-              <div className="text-center py-8">
-                <FileBox className="mx-auto h-8 w-8 text-neutral-300 mb-3" />
-                <p className="text-sm text-neutral-500">No payment history available.</p>
+              <div className="text-center py-6">
+                <FileBox className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                <p className="text-xs sm:text-sm text-slate-500">No payment history available.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {payments.map(p => (
-                  <div key={p.id} className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0">
+                  <div key={p.id} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
                     <div>
-                      <div className="text-sm font-medium text-neutral-900">{new Date(p.date).toLocaleDateString()}</div>
-                      <div className="text-xs text-neutral-500">{p.invoiceId}</div>
+                      <div className="text-xs sm:text-sm font-medium text-slate-900">{new Date(p.date).toLocaleDateString()}</div>
+                      <div className="text-[11px] text-slate-500">{p.invoiceId}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-medium text-neutral-900">₹{p.amount}</div>
-                      <div className="text-xs text-emerald-600">{p.status}</div>
+                      <div className="text-xs sm:text-sm font-bold text-slate-900">₹{p.amount}</div>
+                      <div className="text-[11px] font-semibold text-emerald-600">{p.status}</div>
                     </div>
                   </div>
                 ))}
@@ -187,70 +195,77 @@ export const CompanyBilling: React.FC = () => {
             )}
           </section>
           
-          <div className="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm flex gap-3 items-start">
-            <AlertCircle size={18} className="mt-0.5 shrink-0" />
+          <div className="bg-blue-50 text-blue-900 p-4 rounded-2xl text-xs sm:text-sm flex gap-3 items-start border border-blue-100">
+            <AlertCircle size={18} className="mt-0.5 shrink-0 text-blue-600" />
             <div>
-              <p className="font-medium mb-1">Need more capacity?</p>
-              <p className="text-blue-600/80">Upgrade your plan to unlock higher limits and advanced features.</p>
+              <p className="font-semibold mb-0.5">Need more capacity?</p>
+              <p className="text-blue-700/80 leading-relaxed">Upgrade your plan to unlock higher limits and advanced features.</p>
             </div>
           </div>
         </div>
-      
-            </div>
+      </div>
 
       {showPlanModal && (
-        <div className="fixed inset-0 bg-neutral-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-neutral-100 flex justify-between items-center sticky top-0 bg-white">
-              <h2 className="text-xl font-bold text-neutral-900">Change Subscription Plan</h2>
-              <button onClick={() => setShowPlanModal(false)} className="text-neutral-400 hover:text-neutral-600">
-                <X size={24} />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-100">
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">Change Subscription Plan</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Select the plan that fits your organization.</p>
+              </div>
+              <button 
+                onClick={() => setShowPlanModal(false)} 
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X size={20} />
               </button>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                 {plans.map(p => (
-                  <div key={p.id} className={`border ${plan?.id === p.id ? 'border-blue-600 ring-1 ring-blue-600' : 'border-neutral-200'} rounded-xl p-6 relative flex flex-col`}>
-                    {plan?.id === p.id && (
-                      <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase tracking-wider">
-                        Current
-                      </div>
-                    )}
-                    <h3 className="text-lg font-bold text-neutral-900 mb-2">{p.name}</h3>
-                    <p className="text-sm text-neutral-500 mb-4 flex-1">{p.description}</p>
-                    <div className="mb-6">
-                      <span className="text-3xl font-bold text-neutral-900">₹{p.price}</span>
-                      <span className="text-sm text-neutral-500">/{p.billingInterval}</span>
-                    </div>
-                    
-                    <div className="space-y-3 mb-8">
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <Check size={16} className="text-emerald-500" />
-                        <span>{p.limits?.users || 'Unlimited'} Users</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <Check size={16} className="text-emerald-500" />
-                        <span>{p.limits?.employees || 'Unlimited'} Employees</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <Check size={16} className="text-emerald-500" />
-                        <span>{p.limits?.storage || 'Unlimited'} GB Storage</span>
-                      </div>
-                      {(p.features || []).map(f => (
-                        <div key={f} className="flex items-center gap-2 text-sm text-neutral-600">
-                          <Check size={16} className="text-emerald-500" />
-                          <span className="capitalize">{f.replace('_', ' ')}</span>
+                  <div key={p.id} className={`border ${plan?.id === p.id ? 'border-blue-600 ring-2 ring-blue-600/20 bg-blue-50/20' : 'border-slate-200 bg-white'} rounded-2xl p-5 sm:p-6 relative flex flex-col justify-between`}>
+                    <div>
+                      {plan?.id === p.id && (
+                        <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl uppercase tracking-wider">
+                          Current
                         </div>
-                      ))}
+                      )}
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1">{p.name}</h3>
+                      <p className="text-xs sm:text-sm text-slate-500 mb-4">{p.description}</p>
+                      <div className="mb-5 pb-4 border-b border-slate-100">
+                        <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">₹{p.price}</span>
+                        <span className="text-xs text-slate-500 font-medium">/{p.billingInterval}</span>
+                      </div>
+                      
+                      <div className="space-y-2.5 mb-6">
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+                          <Check size={15} className="text-emerald-600 shrink-0" />
+                          <span>{p.limits?.users || 'Unlimited'} Users</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+                          <Check size={15} className="text-emerald-600 shrink-0" />
+                          <span>{p.limits?.employees || 'Unlimited'} Employees</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+                          <Check size={15} className="text-emerald-600 shrink-0" />
+                          <span>{p.limits?.storage || 'Unlimited'} GB Storage</span>
+                        </div>
+                        {(p.features || []).map(f => (
+                          <div key={f} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+                            <Check size={15} className="text-emerald-600 shrink-0" />
+                            <span className="capitalize">{f.replace('_', ' ')}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <button
                       onClick={() => handleSwitchPlan(p.id)}
                       disabled={plan?.id === p.id || updating}
-                      className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`w-full py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                         plan?.id === p.id 
-                          ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 disabled:opacity-50'
                       }`}
                     >
                       {updating && plan?.id !== p.id ? 'Updating...' : plan?.id === p.id ? 'Current Plan' : 'Switch to ' + p.name}

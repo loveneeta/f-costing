@@ -52,56 +52,86 @@ export const SuperAdminAudit: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 pb-16">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <FileText className="text-blue-600" /> Application Logs
           </h1>
-          <p className="text-neutral-500 mt-1">Global platform-level audit and application events.</p>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Global platform-level audit and application events.</p>
         </div>
         <button 
           onClick={fetchLogs}
           disabled={loading}
-          className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors disabled:opacity-50"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm shadow-sm transition-colors disabled:opacity-50"
         >
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Refresh
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
-        <div className="p-0">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-500">
-              <tr>
-                <th className="p-4 font-medium">Timestamp</th>
-                <th className="p-4 font-medium">Action</th>
-                <th className="p-4 font-medium">Tenant ID</th>
-                <th className="p-4 font-medium">User ID</th>
-                <th className="p-4 font-medium">Entity Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-6 text-center text-neutral-500">Loading logs...</td>
-                </tr>
-              ) : logs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-6 text-center text-neutral-500">No logs found.</td>
-                </tr>
-              ) : logs.map(l => (
-                <tr key={l.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                  <td className="p-4 font-mono text-xs text-neutral-500">{l.timestamp?.toDate ? l.timestamp.toDate().toLocaleString() : new Date(l.timestamp).toLocaleString()}</td>
-                  <td className="p-4 font-medium text-neutral-900">{l.action}</td>
-                  <td className="p-4 font-mono text-xs text-neutral-500">{l.tenantName || l.tenantId || 'SYSTEM'}</td>
-                  <td className="p-4 font-mono text-xs text-neutral-500">{l.userName || l.userId}</td>
-                  <td className="p-4 text-neutral-600">{l.entityType}</td>
-                </tr>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-slate-500 text-sm">Loading logs...</div>
+        ) : logs.length === 0 ? (
+          <div className="p-8 text-center text-slate-500 text-sm">No logs found.</div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="p-4 font-semibold">Timestamp</th>
+                    <th className="p-4 font-semibold">Action</th>
+                    <th className="p-4 font-semibold">Tenant</th>
+                    <th className="p-4 font-semibold">User</th>
+                    <th className="p-4 font-semibold">Entity Type</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {logs.map(l => (
+                    <tr key={l.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4 font-mono text-xs text-slate-500">
+                        {l.timestamp?.toDate ? l.timestamp.toDate().toLocaleString() : new Date(l.timestamp).toLocaleString()}
+                      </td>
+                      <td className="p-4 font-semibold text-slate-900">{l.action}</td>
+                      <td className="p-4 font-mono text-xs text-slate-600">{l.tenantName || l.tenantId || 'SYSTEM'}</td>
+                      <td className="p-4 font-mono text-xs text-slate-600">{l.userName || l.userId}</td>
+                      <td className="p-4 text-xs font-medium text-slate-600">{l.entityType}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {logs.map(l => (
+                <div key={l.id} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-slate-900 text-sm">{l.action}</span>
+                    <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-mono">
+                      {l.entityType}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 pt-1">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Tenant</span>
+                      <span className="font-medium text-slate-800 break-all">{l.tenantName || l.tenantId || 'SYSTEM'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">User</span>
+                      <span className="font-medium text-slate-800 break-all">{l.userName || l.userId}</span>
+                    </div>
+                  </div>
+                  <div className="pt-1 text-[11px] text-slate-400 font-mono">
+                    {l.timestamp?.toDate ? l.timestamp.toDate().toLocaleString() : new Date(l.timestamp).toLocaleString()}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

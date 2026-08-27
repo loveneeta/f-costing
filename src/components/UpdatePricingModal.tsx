@@ -36,33 +36,33 @@ export function UpdatePricingModal({ project, rates, woodTypes, pricing, onClose
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white px-6 py-5 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 sm:p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/10 rounded-xl border border-white/20">
-              <Sparkles size={22} className="text-amber-300" />
+            <div className="p-2 sm:p-2.5 bg-white/10 rounded-xl border border-white/20 shrink-0">
+              <Sparkles size={20} className="text-amber-300" />
             </div>
             <div>
-              <h3 className="text-lg font-bold">Update with Today's Material Rates</h3>
-              <p className="text-xs text-blue-100 mt-0.5">Recalculate pricing on today's raw material master & create a new copy</p>
+              <h3 className="text-base sm:text-lg font-bold">Update with Today's Rates</h3>
+              <p className="text-xs text-blue-100 mt-0.5 hidden sm:block">Recalculate pricing on today's raw material master & create a new copy</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+            className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors shrink-0"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 flex-1 custom-scrollbar">
           {/* Information box */}
-          <div className="bg-blue-50/80 border border-blue-200/80 rounded-xl p-4 flex gap-3 text-xs text-blue-900">
+          <div className="bg-blue-50/80 border border-blue-200/80 rounded-xl p-3.5 sm:p-4 flex gap-3 text-xs text-blue-900">
             <ShieldCheck size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold mb-1">Historical Pricing Protected</p>
+              <p className="font-semibold mb-0.5">Historical Pricing Protected</p>
               <p className="text-blue-800/90 leading-relaxed">
-                Your original costing <span className="font-bold">"{project.name || 'Untitled'}"</span> will remain safely locked at its original rates ({formattedLockedDate}). A new version will be created with today's live material prices.
+                Original costing <span className="font-bold">"{project.name || 'Untitled'}"</span> stays locked at {formattedLockedDate}. A new copy will be created with live prices.
               </p>
             </div>
           </div>
@@ -78,7 +78,7 @@ export function UpdatePricingModal({ project, rates, woodTypes, pricing, onClose
               value={copyName}
               onChange={e => setCopyName(e.target.value)}
               placeholder="e.g. Bedside Table - 27 Aug 2026"
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
             />
             <p className="text-[11px] text-slate-400 mt-1">
               Defaulted to item name with today's date: <span className="font-mono text-slate-600">{todayFormatted}</span>
@@ -86,7 +86,7 @@ export function UpdatePricingModal({ project, rates, woodTypes, pricing, onClose
           </div>
 
           {/* Price Comparison Card */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
               <span>Price Comparison</span>
               <span className="text-[11px] font-normal lowercase">inclusive of GST</span>
@@ -99,7 +99,7 @@ export function UpdatePricingModal({ project, rates, woodTypes, pricing, onClose
                   <Calendar size={13} className="text-slate-400" />
                   Saved Price ({formattedLockedDate})
                 </div>
-                <div className="text-2xl font-mono font-bold text-slate-800">
+                <div className="text-xl sm:text-2xl font-mono font-bold text-slate-800">
                   ₹{comparison.lockedGrandTotal.toLocaleString('en-IN')}
                 </div>
                 <div className="text-[10px] text-slate-400 mt-1 font-medium">Historical snapshot</div>
@@ -111,7 +111,7 @@ export function UpdatePricingModal({ project, rates, woodTypes, pricing, onClose
                   <Sparkles size={13} className="text-blue-600" />
                   Today's Price ({todayFormatted})
                 </div>
-                <div className="text-2xl font-mono font-bold text-blue-900 flex items-baseline gap-2">
+                <div className="text-xl sm:text-2xl font-mono font-bold text-blue-900 flex items-baseline gap-2">
                   ₹{comparison.liveGrandTotal.toLocaleString('en-IN')}
                 </div>
                 <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold">
@@ -136,21 +136,21 @@ export function UpdatePricingModal({ project, rates, woodTypes, pricing, onClose
           {/* Changed Material Items List if any */}
           {comparison.changedItems.length > 0 && (
             <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <div className="bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 border-b border-slate-200 flex justify-between items-center">
+              <div className="bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 border-b border-slate-200 flex justify-between items-center">
                 <span>Material Rate Changes ({comparison.changedItems.length})</span>
-                <span className="text-[10px] text-slate-500 font-normal">Old Rate ➔ Today's Rate</span>
+                <span className="text-[10px] text-slate-500 font-normal">Old ➔ Today</span>
               </div>
               <div className="max-h-36 overflow-y-auto divide-y divide-slate-100 bg-white">
                 {comparison.changedItems.map((item, idx) => (
-                  <div key={idx} className="px-4 py-2 text-xs flex items-center justify-between">
-                    <div>
-                      <span className="font-semibold text-slate-800">{item.name}</span>
-                      <span className="ml-2 text-[10px] text-slate-400 uppercase">({item.category})</span>
+                  <div key={idx} className="px-3.5 py-2 text-xs flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-semibold text-slate-800 truncate block sm:inline">{item.name}</span>
+                      <span className="text-[10px] text-slate-400 uppercase sm:ml-2">({item.category})</span>
                     </div>
-                    <div className="font-mono text-xs flex items-center gap-2">
-                      <span className="text-slate-500 line-through">₹{item.oldRate}/{item.unit}</span>
-                      <ArrowRight size={12} className="text-slate-400" />
-                      <span className="font-bold text-blue-700">₹{item.newRate}/{item.unit}</span>
+                    <div className="font-mono text-xs flex items-center gap-1.5 shrink-0">
+                      <span className="text-slate-400 line-through text-[11px]">₹{item.oldRate}</span>
+                      <ArrowRight size={10} className="text-slate-400" />
+                      <span className="font-bold text-blue-700">₹{item.newRate}</span>
                     </div>
                   </div>
                 ))}
@@ -159,21 +159,21 @@ export function UpdatePricingModal({ project, rates, woodTypes, pricing, onClose
           )}
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!copyName.trim()}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 flex items-center gap-2 transition-all"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all"
             >
               <CheckCircle size={16} />
-              Create Copy & Update to Today's Rates
+              <span>Create Copy & Update Rates</span>
             </button>
           </div>
         </form>

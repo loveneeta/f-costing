@@ -84,33 +84,33 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-6 border-b border-neutral-100 flex justify-between items-center bg-neutral-50">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
           <div>
-            <h3 className="text-xl font-bold text-neutral-900">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900">
               Edit Employee
             </h3>
-            <p className="text-sm text-neutral-500">{employee.email}</p>
+            <p className="text-xs sm:text-sm text-slate-500 truncate max-w-xs sm:max-w-md">{employee.email}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-neutral-400 hover:text-neutral-600"
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                 Role
               </label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as any)}
-                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               >
                 <option value="employee">Employee</option>
                 <option value="manager">Manager</option>
@@ -118,56 +118,55 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                 Department
               </label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 placeholder="e.g. Engineering"
               />
             </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                 Designation
               </label>
               <input
                 type="text"
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
-                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="e.g. Senior Developer"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="e.g. Senior Estimator"
               />
             </div>
           </div>
 
           <div>
-            <h4 className="font-medium text-neutral-900 mb-2 flex items-center gap-2">
-              <Shield size={18} className="text-blue-600" />
+            <h4 className="font-bold text-xs sm:text-sm text-slate-900 mb-3 flex items-center gap-2">
+              <Shield size={16} className="text-blue-600" />
               Granular Permissions
             </h4>
 
             {isAdmin ? (
-              <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-700 border border-blue-100">
-                Admins automatically have all permissions. Granular permissions
-                are disabled.
+              <div className="bg-blue-50/80 p-4 rounded-xl text-xs sm:text-sm text-blue-800 border border-blue-100">
+                Company Admins automatically have all permissions. Granular permissions are disabled.
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {ALL_PERMISSIONS.map((perm) => (
                   <label
                     key={perm}
-                    className="flex items-center gap-2 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50"
+                    className="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors min-h-[44px]"
                   >
                     <input
                       type="checkbox"
                       checked={permissions.includes(perm)}
                       onChange={() => handleTogglePermission(perm)}
-                      className="rounded text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
                     />
-                    <span className="text-sm font-medium text-neutral-700">
+                    <span className="text-xs sm:text-sm font-medium text-slate-700 capitalize">
                       {perm.replace(".", " ")}
                     </span>
                   </label>
@@ -177,17 +176,17 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
           </div>
         </div>
 
-        <div className="p-4 border-t border-neutral-200 bg-neutral-50 flex justify-end gap-3">
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 bg-slate-50/80 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
+            className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70"
+            className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-md shadow-blue-500/20 transition-all"
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>

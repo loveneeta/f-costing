@@ -380,140 +380,188 @@ export const SuperAdminDashboard: React.FC = () => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] p-8 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#f8f9fa] p-4 sm:p-6 lg:p-8 font-sans relative overflow-hidden pb-20">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Superadmin</h1>
-        <p className="text-slate-500 mt-1">Manage your business operations</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Superadmin</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">Manage your business operations</p>
       </div>
 
       {/* Terminal Banner */}
-      <div className="bg-[#0f172a] rounded-2xl p-6 mb-8 flex justify-between items-center text-white shadow-lg relative overflow-hidden">
+      <div className="bg-[#0f172a] rounded-2xl p-5 sm:p-6 mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
         <div className="flex items-center gap-4 relative z-10">
-          <Terminal size={32} className="text-emerald-400" />
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <Terminal size={24} className="text-emerald-400" />
+          </div>
           <div>
-            <h2 className="text-xl font-bold tracking-wide">Super Admin Terminal</h2>
-            <p className="text-slate-400 text-sm">Enterprise Subscription Management</p>
+            <h2 className="text-lg sm:text-xl font-bold tracking-wide">Super Admin Terminal</h2>
+            <p className="text-slate-400 text-xs sm:text-sm">Enterprise Subscription Management</p>
           </div>
         </div>
-        <button className="bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-lg text-sm font-medium relative z-10">
+        <button className="bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-lg text-xs sm:text-sm font-medium relative z-10 w-full sm:w-auto">
           Reset Session
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-4">
-            <Building size={20} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+            <Building size={18} />
           </div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Organizations</div>
-          <div className="text-3xl font-bold text-slate-900">{totalOrgs}</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Orgs</div>
+          <div className="text-xl sm:text-3xl font-bold text-slate-900">{totalOrgs}</div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-4">
-            <CheckCircle size={20} />
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+            <CheckCircle size={18} />
           </div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Subscriptions</div>
-          <div className="text-3xl font-bold text-slate-900">{activeSubs}</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Subs</div>
+          <div className="text-xl sm:text-3xl font-bold text-slate-900">{activeSubs}</div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center mb-4">
-            <ShieldAlert size={20} />
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+            <ShieldAlert size={18} />
           </div>
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Expired / Pending</div>
-          <div className="text-3xl font-bold text-slate-900">{expiredSubs}</div>
+          <div className="text-xl sm:text-3xl font-bold text-slate-900">{expiredSubs}</div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center mb-4">
-            <CreditCard size={20} />
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+            <CreditCard size={18} />
           </div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pending Plan Requests</div>
-          <div className="text-3xl font-bold text-slate-900">0</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pending Requests</div>
+          <div className="text-xl sm:text-3xl font-bold text-slate-900">0</div>
         </div>
       </div>
 
       {/* Main Tabs */}
-      <div className="flex gap-2 mb-6 bg-slate-200/50 p-1 w-max rounded-xl">
+      <div className="flex gap-2 mb-6 bg-slate-200/60 p-1 rounded-xl overflow-x-auto w-full sm:w-max max-w-full">
         <button 
           onClick={() => setActiveTab('organizations')}
-          className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'organizations' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${activeTab === 'organizations' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           Organizations
         </button>
         <button 
           onClick={() => setActiveTab('plan_requests')}
-          className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'plan_requests' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${activeTab === 'plan_requests' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           Plan Requests
         </button>
         <button 
           onClick={() => setActiveTab('audit_logs')}
-          className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'audit_logs' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${activeTab === 'audit_logs' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           Audit Logs
         </button>
       </div>
 
       {/* Content Area */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
         {activeTab === 'organizations' && (
           <>
             {/* Toolbar */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
-              <div className="relative flex-1 max-w-2xl">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
                   type="text" 
                   placeholder="Search organizations by name or ID..." 
-                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3">
                 <button 
                   onClick={() => setShowAddTenantModal(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors"
+                  className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-colors"
                 >
                   + New Tenant
                 </button>
-                <select className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-700 outline-none">
+                <select className="flex-1 sm:flex-initial border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-700 outline-none bg-white">
                   <option>All Statuses</option>
                   <option>Active</option>
                   <option>Expired</option>
                 </select>
-                <select className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-700 outline-none">
+                <select className="flex-1 sm:flex-initial border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-700 outline-none bg-white">
                   <option>Sort by Name</option>
                   <option>Sort by Date</option>
                 </select>
               </div>
             </div>
 
-            {/* Table */}
+            {/* List and Table */}
             {loading ? (
-              <div className="p-12 text-center text-slate-500">Loading organizations...</div>
+              <div className="p-12 text-center text-slate-500 text-sm">Loading organizations...</div>
             ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50">
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Organization ID / Name</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Plan</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Expiry Date</th>
-                    <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-widest">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/50">
+                        <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Organization ID / Name</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Plan</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Expiry Date</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-widest">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {tenants.map(t => {
+                        const sub = getTenantSubscription(t.id);
+                        const isExpired = sub?.status === 'EXPIRED';
+                        return (
+                          <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-5">
+                              <div className="font-bold text-slate-900">{t.name}</div>
+                              <div className="text-xs font-mono text-slate-400 mt-1 uppercase">{t.id}</div>
+                            </td>
+                            <td className="px-6 py-5">
+                              <div className="flex flex-col items-start gap-1.5">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-indigo-50 text-indigo-600">
+                                  {getPlanName(sub?.planId || t.subscriptionPlan)}
+                                </span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${isExpired ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                  {sub?.status || t.status}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-5">
+                              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
+                                {sub?.renewalDate ? new Date(sub.renewalDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase() : 'N/A'}
+                                {isExpired && <span className="ml-2 px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded text-[10px] font-bold tracking-wider">EXPIRED</span>}
+                              </div>
+                            </td>
+                            <td className="px-6 py-5 text-right">
+                              <button 
+                                onClick={() => openDrawer(t)}
+                                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 uppercase tracking-wider transition-colors shadow-sm"
+                              >
+                                Manage
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="block md:hidden divide-y divide-slate-100">
                   {tenants.map(t => {
                     const sub = getTenantSubscription(t.id);
                     const isExpired = sub?.status === 'EXPIRED';
                     return (
-                      <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-5">
-                          <div className="font-bold text-slate-900">{t.name}</div>
-                          <div className="text-xs font-mono text-slate-400 mt-1 uppercase">{t.id}</div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="flex flex-col items-start gap-2">
+                      <div key={t.id} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="font-bold text-slate-900 text-sm">{t.name}</div>
+                            <div className="text-[10px] font-mono text-slate-400 mt-0.5 uppercase break-all">{t.id}</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-indigo-50 text-indigo-600">
                               {getPlanName(sub?.planId || t.subscriptionPlan)}
                             </span>
@@ -521,63 +569,60 @@ export const SuperAdminDashboard: React.FC = () => {
                               {sub?.status || t.status}
                             </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50">
+                          <div className="flex items-center gap-1.5 text-slate-600">
                             <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
-                            {sub?.renewalDate ? new Date(sub.renewalDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase() : 'N/A'}
-                            {isExpired && <span className="ml-2 px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded text-[10px] font-bold tracking-wider">EXPIRED</span>}
+                            <span className="text-[11px] font-medium">
+                              {sub?.renewalDate ? new Date(sub.renewalDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                          <div className="flex items-center justify-end gap-3">
-                            
-                            <button 
-                              onClick={() => openDrawer(t)}
-                              className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 uppercase tracking-wider"
-                            >
-                              Manage
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                          <button 
+                            onClick={() => openDrawer(t)}
+                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
+                          >
+                            Manage
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
           </>
         )}
 
         {activeTab === 'plan_requests' && (
-          <div className="p-8">
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
-              <p className="text-slate-500 font-medium">No plan upgrade requests pending.</p>
+          <div className="p-6 sm:p-8">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center">
+              <p className="text-slate-500 font-medium text-sm">No plan upgrade requests pending.</p>
             </div>
           </div>
         )}
 
         {activeTab === 'audit_logs' && (
-          <div className="p-8">
-             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="px-6 py-5 bg-slate-50/50 flex items-center gap-3">
-                   <ShieldAlert className="text-slate-500" size={20} />
-                   <h2 className="text-lg font-bold text-slate-900">System Audit Log</h2>
+          <div className="p-4 sm:p-8">
+             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 bg-slate-50/50 flex items-center gap-3">
+                   <ShieldAlert className="text-slate-500" size={18} />
+                   <h2 className="text-base sm:text-lg font-bold text-slate-900">System Audit Log</h2>
                 </div>
                 <div className="w-full overflow-x-auto">
                    <table className="w-full text-left">
                      <thead>
                        <tr className="border-y border-slate-100 bg-white">
-                         <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-48">Date & Time</th>
-                         <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-64">Admin</th>
-                         <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Action</th>
-                         <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-48">Target Org</th>
+                         <th className="px-4 sm:px-6 py-3 sm:py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-40 sm:w-48">Date & Time</th>
+                         <th className="px-4 sm:px-6 py-3 sm:py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-48 sm:w-64">Admin</th>
+                         <th className="px-4 sm:px-6 py-3 sm:py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                         <th className="px-4 sm:px-6 py-3 sm:py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-36 sm:w-48">Target Org</th>
                        </tr>
                      </thead>
                      <tbody className="divide-y divide-slate-100">
                        {auditLogs.length === 0 ? (
                          <tr>
-                           <td colSpan={4} className="px-6 py-8 text-center text-slate-500">No logs found.</td>
+                           <td colSpan={4} className="px-6 py-8 text-center text-slate-500 text-sm">No logs found.</td>
                          </tr>
                        ) : auditLogs.map((log, idx) => {
                          const tenantName = tenants.find(t => t.id === log.tenantId)?.name || 'System';
@@ -588,24 +633,24 @@ export const SuperAdminDashboard: React.FC = () => {
                          
                          return (
                            <tr key={log.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                             <td className="px-6 py-6 align-top">
-                               <div className="text-xs text-slate-500 font-medium">
+                             <td className="px-4 sm:px-6 py-4 sm:py-6 align-top">
+                               <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
                                  {dateFormatted}, {timeFormatted}
                                </div>
                              </td>
-                             <td className="px-6 py-6 align-top">
-                               <div className="text-sm font-bold text-slate-900">
+                             <td className="px-4 sm:px-6 py-4 sm:py-6 align-top">
+                               <div className="text-xs sm:text-sm font-bold text-slate-900 break-all">
                                  {userEmail}
                                </div>
                              </td>
-                             <td className="px-6 py-6 align-top">
-                               <div className="text-sm font-bold text-slate-900 mb-3">
+                             <td className="px-4 sm:px-6 py-4 sm:py-6 align-top">
+                               <div className="text-xs sm:text-sm font-bold text-slate-900 mb-2 sm:mb-3">
                                  {log.action === 'auth.login' || log.action === 'Login' ? 'Admin Login' : (log.humanReadableDescription || log.action)}
                                </div>
-                               <div className="space-y-1.5 text-xs text-slate-500 font-medium">
+                               <div className="space-y-1 text-xs text-slate-500 font-medium">
                                  <div className="flex gap-2">
                                    <span className="text-slate-400 w-16">User:</span>
-                                   <span className="text-slate-700 font-bold">{userEmail}</span>
+                                   <span className="text-slate-700 font-bold break-all">{userEmail}</span>
                                  </div>
                                  <div className="flex gap-2">
                                    <span className="text-slate-400 w-16">Login:</span>
@@ -622,13 +667,13 @@ export const SuperAdminDashboard: React.FC = () => {
                                </div>
                                <button 
                                  onClick={() => setTechDetailsLog(log)}
-                                 className="mt-5 text-[10px] font-bold text-slate-400 tracking-wider uppercase hover:text-indigo-600 transition-colors"
+                                 className="mt-4 text-[10px] font-bold text-slate-400 tracking-wider uppercase hover:text-indigo-600 transition-colors"
                                >
                                  View Technical Details
                                </button>
                              </td>
-                             <td className="px-6 py-6 align-top">
-                               <div className="text-sm font-bold text-slate-700">
+                             <td className="px-4 sm:px-6 py-4 sm:py-6 align-top">
+                               <div className="text-xs sm:text-sm font-bold text-slate-700">
                                  {tenantName}
                                </div>
                              </td>

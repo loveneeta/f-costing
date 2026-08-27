@@ -10,7 +10,6 @@ import {
   Copy, 
   Edit2, 
   Trash2, 
-  Hammer, 
   Zap, 
   FolderOpen,
   Sparkles,
@@ -134,19 +133,19 @@ export function Dashboard({ onEdit }: Props) {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* 1. Header & Primary Action */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 pb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
               Costing & Manufacturing Dashboard
             </h1>
             <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-200">
               Active Workspace
             </span>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-500">
             Real-time material costing, bill of materials, profit margins & quote generation
           </p>
         </div>
@@ -154,7 +153,7 @@ export function Dashboard({ onEdit }: Props) {
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={createBlankCosting}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-bold shadow-sm transition-colors"
           >
             <Plus size={18} />
             New Costing
@@ -163,9 +162,9 @@ export function Dashboard({ onEdit }: Props) {
       </div>
 
       {/* 2. Key Metrics Overview Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Total Costings */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Costings</span>
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
@@ -173,8 +172,8 @@ export function Dashboard({ onEdit }: Props) {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-slate-900">{regularProjects.length}</div>
-            <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{regularProjects.length}</div>
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 flex-wrap">
               <span className="font-semibold text-blue-600">{templates.length} templates</span>
               <span>•</span>
               <span>{categories.length} categories</span>
@@ -183,7 +182,7 @@ export function Dashboard({ onEdit }: Props) {
         </div>
 
         {/* Portfolio Valuation */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Portfolio Value</span>
             <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
@@ -191,10 +190,10 @@ export function Dashboard({ onEdit }: Props) {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-emerald-700 font-mono">
+            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-mono">
               ₹{portfolioStats.totalSellingValue > 0 ? portfolioStats.totalSellingValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'}
             </div>
-            <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-500 flex-wrap">
               <span>Avg. item:</span>
               <span className="font-semibold text-slate-700">
                 {regularProjects.length > 0 ? `₹${portfolioStats.avgProjectPrice.toLocaleString('en-IN')}` : '—'}
@@ -204,7 +203,7 @@ export function Dashboard({ onEdit }: Props) {
         </div>
 
         {/* Rate Master Inventory */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Material Master</span>
             <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
@@ -212,8 +211,8 @@ export function Dashboard({ onEdit }: Props) {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-slate-900">{rates.length}</div>
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{rates.length}</div>
+            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500 flex-wrap">
               <span>{woodTypes.length} Wood Species</span>
               <span>•</span>
               <span className="text-purple-600 font-medium">Configured</span>
@@ -222,7 +221,7 @@ export function Dashboard({ onEdit }: Props) {
         </div>
 
         {/* Target Margins */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Target Profit Margin</span>
             <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
@@ -230,10 +229,10 @@ export function Dashboard({ onEdit }: Props) {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-amber-700">
+            <div className="text-2xl sm:text-3xl font-extrabold text-amber-700">
               {settings?.pricing?.profitPercent ?? 0}%
             </div>
-            <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 flex-wrap">
               <span>Overhead: {settings?.pricing?.overheadPercent ?? 0}%</span>
               <span>•</span>
               <span>GST: {settings?.pricing?.gstPercent ?? 0}%</span>
@@ -247,21 +246,21 @@ export function Dashboard({ onEdit }: Props) {
         {/* Left 2 Cols: Costings List & Table */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               <FileText size={18} className="text-slate-600" />
               Recent Costings
             </h2>
 
             {/* Search & Category Filter */}
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="relative">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search costings..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 outline-none w-36 sm:w-48"
+                  className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 outline-none w-full sm:w-48"
                 />
               </div>
 
@@ -282,7 +281,7 @@ export function Dashboard({ onEdit }: Props) {
 
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             {regularProjects.length === 0 ? (
-              <div className="p-12 text-center space-y-4">
+              <div className="p-8 sm:p-12 text-center space-y-4">
                 <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
                   <FolderOpen size={28} />
                 </div>
@@ -295,7 +294,7 @@ export function Dashboard({ onEdit }: Props) {
                 <div className="pt-2">
                   <button
                     onClick={createBlankCosting}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold shadow-sm transition-colors"
                   >
                     <Plus size={16} />
                     Create First Costing
@@ -307,83 +306,152 @@ export function Dashboard({ onEdit }: Props) {
                 No costings found matching "{searchTerm}".
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left whitespace-nowrap">
-                  <thead className="bg-slate-50/80 border-b border-slate-200">
-                    <tr>
-                      <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Item Details</th>
-                      <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Category</th>
-                      <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dimensions (mm)</th>
-                      <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider text-right">Selling Price</th>
-                      <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredProjects.map(p => {
-                      const res = calculateProjectCost(p, rates, settings?.pricing, woodTypes);
-                      return (
-                        <tr
-                          key={p.id}
-                          className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
-                          onClick={() => onEdit(p)}
-                        >
-                          <td className="p-3.5">
-                            <div className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left whitespace-nowrap">
+                    <thead className="bg-slate-50/80 border-b border-slate-200">
+                      <tr>
+                        <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Item Details</th>
+                        <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Category</th>
+                        <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dimensions (mm)</th>
+                        <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider text-right">Selling Price</th>
+                        <th className="p-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredProjects.map(p => {
+                        const res = calculateProjectCost(p, rates, settings?.pricing, woodTypes);
+                        return (
+                          <tr
+                            key={p.id}
+                            className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                            onClick={() => onEdit(p)}
+                          >
+                            <td className="p-3.5">
+                              <div className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
+                                {p.name || 'Untitled Item'}
+                              </div>
+                              {p.subName && (
+                                <div className="text-[11px] text-slate-500 mt-0.5">{p.subName}</div>
+                              )}
+                            </td>
+                            <td className="p-3.5 text-xs text-slate-600">
+                              <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-medium">
+                                {p.category || 'General'}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-xs font-mono text-slate-600">
+                              {p.overallL || 0} × {p.overallW || 0} × {p.overallH || 0}
+                            </td>
+                            <td className="p-3.5 text-right font-mono font-bold text-emerald-700 text-sm">
+                              ₹{res.totals.grandTotal.toFixed(0)}
+                            </td>
+                            <td className="p-3.5 text-center" onClick={e => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => setProjectToUpdatePricing(p)}
+                                  className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                                  title="Update on Today's Pricing & Make Copy"
+                                >
+                                  <Sparkles size={15} />
+                                </button>
+                                <button
+                                  onClick={() => onEdit(p)}
+                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                  title="Edit Costing"
+                                >
+                                  <Edit2 size={15} />
+                                </button>
+                                <button
+                                  onClick={() => handleDuplicate(p)}
+                                  className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-md transition-colors"
+                                  title="Duplicate"
+                                >
+                                  <Copy size={15} />
+                                </button>
+                                <button
+                                  onClick={() => setProjectToDelete(p.id)}
+                                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden divide-y divide-slate-200">
+                  {filteredProjects.map(p => {
+                    const res = calculateProjectCost(p, rates, settings?.pricing, woodTypes);
+                    return (
+                      <div key={p.id} className="p-4 space-y-2.5 bg-white">
+                        <div className="flex items-start justify-between gap-2" onClick={() => onEdit(p)}>
+                          <div className="space-y-0.5 min-w-0">
+                            <div className="font-bold text-sm text-slate-900 truncate">
                               {p.name || 'Untitled Item'}
                             </div>
-                            {p.subName && (
-                              <div className="text-[11px] text-slate-500 mt-0.5">{p.subName}</div>
-                            )}
-                          </td>
-                          <td className="p-3.5 text-xs text-slate-600">
-                            <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-medium">
-                              {p.category || 'General'}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-xs font-mono text-slate-600">
-                            {p.overallL || 0} × {p.overallW || 0} × {p.overallH || 0}
-                          </td>
-                          <td className="p-3.5 text-right font-mono font-bold text-emerald-700 text-sm">
-                            ₹{res.totals.grandTotal.toFixed(0)}
-                          </td>
-                          <td className="p-3.5 text-center" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => setProjectToUpdatePricing(p)}
-                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                                title="Update on Today's Pricing & Make Copy"
-                              >
-                                <Sparkles size={15} />
-                              </button>
-                              <button
-                                onClick={() => onEdit(p)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                                title="Edit Costing"
-                              >
-                                <Edit2 size={15} />
-                              </button>
-                              <button
-                                onClick={() => handleDuplicate(p)}
-                                className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-md transition-colors"
-                                title="Duplicate"
-                              >
-                                <Copy size={15} />
-                              </button>
-                              <button
-                                onClick={() => setProjectToDelete(p.id)}
-                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 size={15} />
-                              </button>
+                            <div className="flex items-center gap-1.5 flex-wrap text-xs text-slate-500">
+                              {p.subName && (
+                                <span className="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded text-[10px] font-medium">
+                                  {p.subName}
+                                </span>
+                              )}
+                              <span>{p.category || 'General'}</span>
+                              <span>•</span>
+                              <span className="font-mono">{p.overallL || 0}×{p.overallW || 0}×{p.overallH || 0}</span>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className="font-mono font-bold text-sm text-emerald-700">
+                              ₹{res.totals.grandTotal.toFixed(0)}
+                            </div>
+                            <div className="text-[10px] text-slate-400">inc. GST</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-1 pt-1.5 border-t border-slate-100">
+                          <button
+                            onClick={() => setProjectToUpdatePricing(p)}
+                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                            title="Update Rates"
+                          >
+                            <Sparkles size={15} />
+                          </button>
+                          <button
+                            onClick={() => onEdit(p)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleDuplicate(p)}
+                            className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-md transition-colors"
+                            title="Duplicate"
+                          >
+                            <Copy size={15} />
+                          </button>
+                          <button
+                            onClick={() => setProjectToDelete(p.id)}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -400,7 +468,7 @@ export function Dashboard({ onEdit }: Props) {
           />
 
           {/* Rate Master Quick Glance */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <Tags size={16} className="text-purple-600" />
