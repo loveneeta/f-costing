@@ -384,9 +384,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const cleanEmail = params.email.trim().toLowerCase();
     try {
       console.log(`[AuthContext] Executing registration for: ${cleanEmail}`);
-      const cred = await withAuthRetry(() =>
-        createUserWithEmailAndPassword(auth, cleanEmail, params.password),
-      );
+      let cred;
+      try {
+        cred = await withAuthRetry(() =>
+          createUserWithEmailAndPassword(auth, cleanEmail, params.password),
+        );
+      } catch (createErr: any) {
+        if (createErr.code === 'auth/email-already-in-use' && params.invitationToken) {
+          console.log("[AuthContext] Email in use. Trying sign in for invite.");
+          cred = await withAuthRetry(() => signInWithEmailAndPassword(auth, cleanEmail, params.password));
+        } else {
+          throw createErr;
+        }
+      }
 
       await sendEmailVerification(cred.user);
 
@@ -466,7 +476,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const userDocRef = doc(db, "users", cred.user.uid);
       console.log("Creating user doc...", userDocData);
       try {
-        await setDoc(userDocRef, userDocData);
+        await setDoc(userDocRef, userDocData, { merge: true });
       } catch (setUserErr) {
         console.error("Failed to set user doc:", setUserErr);
         throw setUserErr;
