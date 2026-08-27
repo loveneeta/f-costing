@@ -117,5 +117,12 @@ export interface Project {
   hardware: HardwareComponent[];
   finishing: FinishingComponent[];
   labour: LabourComponent[];
+
+  // Historical Pricing Snapshot & Lock
+  ratesSnapshot?: RateItem[];
+  woodTypesSnapshot?: WoodType[];
+  pricingSnapshot?: PricingSettings;
+  ratesLockedAt?: string;
+  isPricingLocked?: boolean;
 }
 

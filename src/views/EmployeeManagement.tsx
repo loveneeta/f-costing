@@ -325,8 +325,7 @@ export const EmployeeManagement: React.FC = () => {
                     <CheckCircle size={18} /> Invitation Generated!
                   </p>
                   <p className="text-sm">
-                    Since email sending is mocked in this demo, please copy the
-                    link below and send it to the user:
+                    Please copy the direct invitation link below and share it with the employee:
                   </p>
                 </div>
                 <a href={generatedLink} target="_blank" rel="noopener noreferrer" className="block w-full px-4 py-2 mb-4 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium rounded-lg hover:underline text-center">Open Link in New Tab</a>
