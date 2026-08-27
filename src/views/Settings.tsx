@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useStore } from "../context/StoreContext";
+import { CompanySettings, PricingSettings } from "../types";
 import {
   Save,
   TrendingUp,
@@ -30,9 +31,21 @@ export function Settings() {
     if (type === "checkbox") {
       checked = (e.target as HTMLInputElement).checked;
     }
+    const defaultCompany: CompanySettings = {
+      name: '',
+      gst: '',
+      address: '',
+      phone: '',
+      email: '',
+      bankDetails: '',
+      hideBankDetails: false,
+      hideNotes: false,
+      hideTerms: false,
+    };
     updateSettings({
       ...settings,
       company: {
+        ...defaultCompany,
         ...(settings.company || {}),
         [name]: type === "checkbox" ? checked : value,
       },
@@ -41,9 +54,20 @@ export function Settings() {
 
   const handlePricingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const defaultPricing: PricingSettings = {
+      wastagePercent: 10,
+      overheadPercent: 5,
+      profitPercent: 23,
+      gstPercent: 18,
+      cashDiscountPercent: 2,
+      validityDays: 7,
+      volumeThreshold: 1000000,
+      volumeDiscountPercent: 3,
+    };
     updateSettings({
       ...settings,
       pricing: {
+        ...defaultPricing,
         ...(settings.pricing || {}),
         [name]: parseFloat(value) || 0,
       },

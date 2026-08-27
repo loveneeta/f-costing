@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Building, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { Footer } from "../components/Footer";
 import {
   doc,
   getDocs,
@@ -76,92 +77,95 @@ export const AcceptInvitation: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-neutral-200 w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <div className="bg-blue-600 text-white p-3 rounded-xl shadow-md">
-            <Building size={28} />
-          </div>
-        </div>
-
-        <h1 className="text-2xl font-bold text-center text-neutral-900 tracking-tight mb-2">
-          Accept Invitation
-        </h1>
-        <p className="text-sm text-neutral-500 text-center mb-6">
-          You have been invited to join an organization. Create your account to
-          continue.
-        </p>
-
-        {error && (
-          <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm mb-6 border border-red-200 flex items-start gap-2">
-            <AlertCircle
-              size={18}
-              className="text-red-600 mt-0.5 flex-shrink-0"
-            />
-            <div>{error}</div>
-          </div>
-        )}
-
-        <form onSubmit={handleAccept} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email || ""}
-              disabled
-              className="w-full px-4 py-2 border border-neutral-200 bg-neutral-50 rounded-lg text-neutral-500 text-sm"
-            />
+    <div className="min-h-screen flex flex-col justify-between bg-neutral-100">
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-neutral-200 w-full max-w-md">
+          <div className="flex justify-center mb-6">
+            <div className="bg-blue-600 text-white p-3 rounded-xl shadow-md">
+              <Building size={28} />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-              placeholder="John Doe"
-            />
-          </div>
+          <h1 className="text-2xl font-bold text-center text-neutral-900 tracking-tight mb-2">
+            Accept Invitation
+          </h1>
+          <p className="text-sm text-neutral-500 text-center mb-6">
+            You have been invited to join an organization. Create your account to
+            continue.
+          </p>
 
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Create Password
-            </label>
-            <div className="relative">
-              <Lock
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
-                size={16}
+          {error && (
+            <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm mb-6 border border-red-200 flex items-start gap-2">
+              <AlertCircle
+                size={18}
+                className="text-red-600 mt-0.5 flex-shrink-0"
               />
+              <div>{error}</div>
+            </div>
+          )}
+
+          <form onSubmit={handleAccept} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Email
+              </label>
               <input
-                type="password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                placeholder="••••••••"
+                type="email"
+                value={email || ""}
+                disabled
+                className="w-full px-4 py-2 border border-neutral-200 bg-neutral-50 rounded-lg text-neutral-500 text-sm"
               />
             </div>
-            <p className="text-xs text-neutral-500 mt-1">
-              Must be at least 8 characters.
-            </p>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading || !token}
-            className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 text-sm shadow-sm mt-4"
-          >
-            {loading ? "Creating Account..." : "Accept Invitation"}
-          </button>
-        </form>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Create Password
+              </label>
+              <div className="relative">
+                <Lock
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                  size={16}
+                />
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  placeholder="••••••••"
+                />
+              </div>
+              <p className="text-xs text-neutral-500 mt-1">
+                Must be at least 8 characters.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !token}
+              className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 text-sm shadow-sm mt-4"
+            >
+              {loading ? "Creating Account..." : "Accept Invitation"}
+            </button>
+          </form>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

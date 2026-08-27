@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Calculator, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { Footer } from '../components/Footer';
 
 type Mode = 'signin' | 'register' | 'forgot';
 
@@ -25,7 +26,11 @@ export const LoginView: React.FC = () => {
       if (appUser.role === 'super_admin') {
         navigate(from === '/' ? '/superadmin/dashboard' : from, { replace: true });
       } else {
-        navigate(from, { replace: true });
+        if (from.startsWith('/superadmin')) {
+          navigate('/', { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
       }
     }
   }, [user, appUser, navigate, from]);
@@ -44,10 +49,10 @@ export const LoginView: React.FC = () => {
           name,
           companyName
         });
-        navigate(from, { replace: true });
+        // Let the useEffect handle the redirection to prevent race conditions
       } else if (mode === 'signin') {
         await login(email, password);
-        navigate(from, { replace: true });
+        // Let the useEffect handle the redirection to prevent race conditions
       } else if (mode === 'forgot') {
         await resetPassword(email);
         setMessage('Password reset email dispatched! If an account is associated with this email address, instructions will arrive in your inbox shortly.');
@@ -60,8 +65,9 @@ export const LoginView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-neutral-200 w-full max-w-md">
+    <div className="min-h-screen flex flex-col justify-between bg-neutral-100">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-neutral-200 w-full max-w-md">
         <div className="flex justify-center mb-6">
           <div className="bg-blue-600 text-white p-3 rounded-xl shadow-md">
             <Calculator size={28} />
@@ -201,6 +207,8 @@ export const LoginView: React.FC = () => {
           </div>
         )}
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

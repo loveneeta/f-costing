@@ -5,6 +5,7 @@ import { calculateProjectCost } from '../engine';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Trash2, ArrowLeft, Save, FileText, Layers, TreePine, Wrench, Copy, HardHat, Paintbrush } from 'lucide-react';
 import { SaveSuccessModal } from '../components/SaveSuccessModal';
+import { Footer } from '../components/Footer';
 
 interface Props {
   project: Project;
@@ -422,6 +423,7 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
             </section>
 
           </div>
+          <Footer className="mt-8 border-t-0 rounded-xl bg-white/70 border border-slate-200/80" />
         </main>
         
         {/* Right Pane - Costing Summary */}

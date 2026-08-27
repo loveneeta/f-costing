@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 
@@ -127,9 +127,39 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               setPlan({ id: planSnap.id, ...planSnap.data() } as SubscriptionPlan);
             }
           }
+        } else if (isMounted) {
+          // If tenant document does not exist yet (e.g. newly initialized Firebase project), auto-provision an active tenant
+          const defaultTenant: Tenant = {
+            id: appUser.tenantId,
+            name: appUser.name ? `${appUser.name}'s Company` : 'My Organization',
+            email: appUser.email || '',
+            phone: '',
+            status: 'active',
+            subscriptionPlan: 'free',
+            settings: {},
+            createdAt: new Date().toISOString(),
+          };
+          try {
+            await setDoc(tenantRef, defaultTenant, { merge: true });
+          } catch (createErr) {
+            console.warn('[TenantContext] Could not auto-create tenant doc:', createErr);
+          }
+          setTenant(defaultTenant);
         }
       } catch (error) {
         console.error("Error fetching tenant details:", error);
+        if (isMounted) {
+          setTenant({
+            id: appUser.tenantId,
+            name: appUser.name ? `${appUser.name}'s Company` : 'My Organization',
+            email: appUser.email || '',
+            phone: '',
+            status: 'active',
+            subscriptionPlan: 'free',
+            settings: {},
+            createdAt: new Date().toISOString(),
+          });
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -140,9 +170,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       isMounted = false;
     };
-  }, [appUser?.tenantId]);
+  }, [appUser?.tenantId, appUser?.name, appUser?.email]);
 
-  const isTenantActive = tenant?.status?.toLowerCase() === 'active' || tenant?.status?.toLowerCase() === 'trial';
+  const isTenantActive = tenant 
+    ? (tenant.status?.toLowerCase() === 'active' || tenant.status?.toLowerCase() === 'trial')
+    : true;
 
   const canAccessFeature = (feature: string) => {
     if (!plan) return false;

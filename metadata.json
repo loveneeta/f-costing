@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Costing Pro",
+  "description": "Furniture Costing Pro - By Loveneet Arora",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

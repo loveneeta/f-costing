@@ -12,21 +12,46 @@ const UNIT_MULTIPLIERS = {
   m: 1000
 };
 
-export function calculateProjectCost(project: Project, rateMaster: RateItem[], pricing: PricingSettings, woodTypes: WoodType[]) {
-  const getRate = (id: string) => rateMaster.find(r => r.id === id)?.rate || 0;
+export function calculateProjectCost(
+  project: Project,
+  rateMaster: RateItem[] = [],
+  pricing: PricingSettings = {
+    wastagePercent: 10,
+    overheadPercent: 5,
+    profitPercent: 23,
+    gstPercent: 18,
+    cashDiscountPercent: 2,
+    validityDays: 7,
+    volumeThreshold: 1000000,
+    volumeDiscountPercent: 3
+  },
+  woodTypes: WoodType[] = []
+) {
+  const getRate = (id: string) => (rateMaster || []).find(r => r.id === id)?.rate || 0;
   
-  const mult = UNIT_MULTIPLIERS[project.dimensionUnit || 'mm'];
+  const mult = UNIT_MULTIPLIERS[project?.dimensionUnit || 'mm'] || 1;
+  const safePricing = pricing || {
+    wastagePercent: 10,
+    overheadPercent: 5,
+    profitPercent: 23,
+    gstPercent: 18,
+    cashDiscountPercent: 2,
+    validityDays: 7,
+    volumeThreshold: 1000000,
+    volumeDiscountPercent: 3
+  };
+  const safeWoodTypes = woodTypes || [];
 
   // 1. Sheet Materials & Edge Banding
   let totalSheetCost = 0;
   let totalEdgeBandCost = 0;
-  const sheetBreakdown = project.sheetComponents.map(comp => {
-    const l_mm = comp.l * mult;
-    const w_mm = comp.w * mult;
+  const sheetBreakdown = (project?.sheetComponents || []).map(comp => {
+    const l_mm = (comp.l || 0) * mult;
+    const w_mm = (comp.w || 0) * mult;
     // Area in sq.ft
     const area = (l_mm * w_mm) / SQ_FT_DIVISOR;
     const rate = getRate(comp.rateId);
-    const cost = area * comp.qty * rate;
+    const cost = area * (comp.qty || 0) * rate;
     
     // Edgebanding in rmt (running meter)
     let edgeLengthMm = 0;
@@ -37,7 +62,7 @@ export function calculateProjectCost(project: Project, rateMaster: RateItem[], p
     
     const edgeRmt = edgeLengthMm / 1000;
     const edgeRate = getRate(comp.edgeRateId);
-    const edgeCost = edgeRmt * comp.qty * edgeRate;
+    const edgeCost = edgeRmt * (comp.qty || 0) * edgeRate;
 
     totalSheetCost += cost;
     totalEdgeBandCost += edgeCost;
@@ -47,19 +72,19 @@ export function calculateProjectCost(project: Project, rateMaster: RateItem[], p
 
   // 2. Solid Wood
   let totalSolidWoodCost = 0;
-  const solidWoodBreakdown = project.solidWoodComponents.map(comp => {
-    const l_mm = comp.l * mult;
-    const w_mm = comp.w * mult;
-    const t_mm = comp.t * mult;
+  const solidWoodBreakdown = (project?.solidWoodComponents || []).map(comp => {
+    const l_mm = (comp.l || 0) * mult;
+    const w_mm = (comp.w || 0) * mult;
+    const t_mm = (comp.t || 0) * mult;
     
     const vol = (l_mm * w_mm * t_mm) / CU_FT_DIVISOR;
     
     // Find rate based on length in feet
     const lengthFt = l_mm / 304.8;
-    const wood = woodTypes.find(w => w.id === comp.woodTypeId);
+    const wood = safeWoodTypes.find(w => w.id === comp.woodTypeId);
     let rate = 0;
     
-    if (wood) {
+    if (wood && wood.ranges) {
       const sortedRanges = [...wood.ranges].sort((a, b) => a.minFt - b.minFt);
       for (const r of sortedRanges) {
         if (lengthFt >= r.minFt && lengthFt <= r.maxFt) {
@@ -78,25 +103,25 @@ export function calculateProjectCost(project: Project, rateMaster: RateItem[], p
       }
     }
 
-    const cost = vol * comp.qty * rate;
+    const cost = vol * (comp.qty || 0) * rate;
     totalSolidWoodCost += cost;
     return { ...comp, vol, rate, cost };
   });
 
   // 3. Hardware
   let totalHardwareCost = 0;
-  const hardwareBreakdown = project.hardware.map(comp => {
+  const hardwareBreakdown = (project?.hardware || []).map(comp => {
     const rate = comp.rateId ? getRate(comp.rateId) : (comp.customRate || 0);
-    const cost = comp.qty * rate;
+    const cost = (comp.qty || 0) * rate;
     totalHardwareCost += cost;
     return { ...comp, rate, cost };
   });
 
   // 4. Finishing
   let totalFinishingCost = 0;
-  const finishingBreakdown = project.finishing.map(comp => {
+  const finishingBreakdown = (project?.finishing || []).map(comp => {
     const rate = getRate(comp.rateId);
-    const cost = comp.areaSqFt * rate;
+    const cost = (comp.areaSqFt || 0) * rate;
     totalFinishingCost += cost;
     return { ...comp, rate, cost };
   });
@@ -106,18 +131,18 @@ export function calculateProjectCost(project: Project, rateMaster: RateItem[], p
   
   // Wastage is applied to sheet materials, edge banding, solid wood, and finishing (typically not hardware)
   const materialSubjectToWastage = totalSheetCost + totalEdgeBandCost + totalSolidWoodCost + totalFinishingCost;
-  const wastageCost = materialSubjectToWastage * (pricing.wastagePercent / 100);
+  const wastageCost = materialSubjectToWastage * ((safePricing.wastagePercent || 0) / 100);
   
   const totalMaterialCost = rawMaterialCost + wastageCost;
 
   // 5. Labour
   let totalLabourCost = 0;
-  const labourBreakdown = project.labour.map(comp => {
+  const labourBreakdown = (project?.labour || []).map(comp => {
     let cost = 0;
     if (comp.type === 'item' || comp.type === 'hour') {
-      cost = comp.qty * comp.rate;
+      cost = (comp.qty || 0) * (comp.rate || 0);
     } else if (comp.type === 'percent_material') {
-      cost = totalMaterialCost * (comp.rate / 100);
+      cost = totalMaterialCost * ((comp.rate || 0) / 100);
     }
     totalLabourCost += cost;
     return { ...comp, cost };
@@ -127,26 +152,26 @@ export function calculateProjectCost(project: Project, rateMaster: RateItem[], p
   const subtotal = totalMaterialCost + totalLabourCost;
 
   // Overhead
-  const overheadCost = subtotal * (pricing.overheadPercent / 100);
+  const overheadCost = subtotal * ((safePricing.overheadPercent || 0) / 100);
 
   // Total Cost (Cost Price)
   const totalCostPrice = subtotal + overheadCost;
 
   // Profit
-  const profitAmount = totalCostPrice * (pricing.profitPercent / 100);
+  const profitAmount = totalCostPrice * ((safePricing.profitPercent || 0) / 100);
 
   // Selling Price
   let sellingPrice = totalCostPrice + profitAmount;
   
   // Volume Discount
   let volumeDiscountAmount = 0;
-  if (sellingPrice >= pricing.volumeThreshold && pricing.volumeThreshold > 0) {
-    volumeDiscountAmount = sellingPrice * (pricing.volumeDiscountPercent / 100);
+  if (sellingPrice >= (safePricing.volumeThreshold || 0) && (safePricing.volumeThreshold || 0) > 0) {
+    volumeDiscountAmount = sellingPrice * ((safePricing.volumeDiscountPercent || 0) / 100);
     sellingPrice -= volumeDiscountAmount;
   }
 
   // GST
-  const gstAmount = sellingPrice * (pricing.gstPercent / 100);
+  const gstAmount = sellingPrice * ((safePricing.gstPercent || 0) / 100);
 
   // Grand Total
   const grandTotal = sellingPrice + gstAmount;

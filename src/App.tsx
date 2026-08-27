@@ -33,6 +33,7 @@ import { Settings } from './views/Settings';
 import { Project } from './types';
 import { CostingEditor } from './views/CostingEditor';
 import { v4 as uuidv4 } from 'uuid';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { useAuth } from './contexts/AuthContext';
 
@@ -78,7 +79,11 @@ function AppRoutes() {
   };
 
   if (editingProject) {
-    return <CostingEditor project={editingProject} onClose={() => setEditingProject(null)} />;
+    return (
+      <ProtectedRoute>
+        <CostingEditor project={editingProject} onClose={() => setEditingProject(null)} />
+      </ProtectedRoute>
+    );
   }
 
   return (
@@ -90,9 +95,7 @@ function AppRoutes() {
       
       <Route element={
         <ProtectedRoute>
-          <StoreProvider>
-            <Layout />
-          </StoreProvider>
+          <Layout />
         </ProtectedRoute>
       }>
         <Route path="/" element={<Dashboard onEdit={handleEditProject} />} />
@@ -151,12 +154,18 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <PlatformSettingsProvider><TenantProvider>
-        <HashRouter>
-          <AppRoutes />
-        </HashRouter>
-      </TenantProvider></PlatformSettingsProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <PlatformSettingsProvider>
+          <TenantProvider>
+            <StoreProvider>
+              <HashRouter>
+                <AppRoutes />
+              </HashRouter>
+            </StoreProvider>
+          </TenantProvider>
+        </PlatformSettingsProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

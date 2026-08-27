@@ -67,12 +67,12 @@ export const CompanyBilling: React.FC = () => {
       try {
         const q = query(
           collection(db, 'payments'), 
-          where('tenantId', '==', tenant.id), 
-          orderBy('date', 'desc'), 
-          limit(10)
+          where('tenantId', '==', tenant.id)
         );
         const snap = await getDocs(q);
-        setPayments(snap.docs.map(d => ({ id: d.id, ...d.data() } as Payment)));
+        const fetchedPayments = snap.docs.map(d => ({ id: d.id, ...d.data() } as Payment));
+        fetchedPayments.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+        setPayments(fetchedPayments.slice(0, 10));
       } catch (e) {
         console.error(e);
       }

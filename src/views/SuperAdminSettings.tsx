@@ -40,7 +40,7 @@ export const SuperAdminSettings: React.FC = () => {
     try {
       await setDoc(doc(db, 'platform_settings', 'global'), settings);
       if (appUser) {
-        await logAuditEvent(null, appUser.id, {
+        await logAuditEvent(null, appUser.uid, {
           action: 'update_platform_settings',
           entityType: 'platform_settings',
           entityId: 'global',
