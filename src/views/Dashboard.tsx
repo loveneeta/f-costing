@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Project } from '../types';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { UpdatePricingModal } from '../components/UpdatePricingModal';
+import { RoughEstimator } from '../components/RoughEstimator';
 
 interface Props {
   onEdit: (p: Project) => void;
@@ -31,14 +32,6 @@ export function Dashboard({ onEdit }: Props) {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [projectToUpdatePricing, setProjectToUpdatePricing] = useState<Project | null>(null);
-  const [confirmClearAll, setConfirmClearAll] = useState(false);
-
-  // Quick Estimator Scratchpad State - Starts completely blank with no dummy pre-fills
-  const [quickL, setQuickL] = useState<string>('');
-  const [quickW, setQuickW] = useState<string>('');
-  const [quickH, setQuickH] = useState<string>('');
-  const [quickRateId, setQuickRateId] = useState<string>(rates[0]?.id || '');
-  const [quickFinishArea, setQuickFinishArea] = useState<string>('');
 
   const regularProjects = useMemo(() => projects.filter(p => !p.isTemplate), [projects]);
   const templates = useMemo(() => projects.filter(p => p.isTemplate), [projects]);
@@ -121,46 +114,6 @@ export function Dashboard({ onEdit }: Props) {
     onEdit(newCopy);
   };
 
-  const handleClearAllCostings = () => {
-    regularProjects.forEach(p => {
-      deleteProject(p.id);
-    });
-    setConfirmClearAll(false);
-  };
-
-  // Scratchpad calculator - only computes when user provides valid numbers
-  const scratchpadEstimate = useMemo(() => {
-    const numL = parseFloat(quickL);
-    const numW = parseFloat(quickW);
-    const numH = parseFloat(quickH);
-    const numFinish = parseFloat(quickFinishArea) || 0;
-
-    if (!numL || !numW || !numH || isNaN(numL) || isNaN(numW) || isNaN(numH) || numL <= 0 || numW <= 0 || numH <= 0) {
-      return null;
-    }
-
-    const selectedRate = rates.find(r => r.id === quickRateId)?.rate || 0;
-    // Box surface area: 2*(L*W + W*H + L*H) mm2 / 92903.04 sqft
-    const surfaceSqFt = (2 * (numL * numW + numW * numH + numL * numH)) / 92903.04;
-    const materialCost = surfaceSqFt * selectedRate * 1.15; // 15% hardware & wastage
-    const finishRate = rates.find(r => r.category === 'finishing')?.rate || 0;
-    const finishCost = numFinish * finishRate;
-    const labourCost = materialCost * 0.25;
-    const subtotal = materialCost + finishCost + labourCost;
-    const overhead = subtotal * ((settings?.pricing?.overheadPercent || 0) / 100);
-    const profit = (subtotal + overhead) * ((settings?.pricing?.profitPercent || 0) / 100);
-    const total = subtotal + overhead + profit;
-    const gst = total * ((settings?.pricing?.gstPercent || 0) / 100);
-
-    return {
-      surfaceSqFt: Math.round(surfaceSqFt * 10) / 10,
-      materialCost: Math.round(materialCost),
-      finishCost: Math.round(finishCost),
-      labourCost: Math.round(labourCost),
-      estimatedTotal: Math.round(total + gst)
-    };
-  }, [quickL, quickW, quickH, quickRateId, quickFinishArea, rates, settings]);
-
   const createBlankCosting = () => {
     onEdit({
       id: uuidv4(),
@@ -199,17 +152,6 @@ export function Dashboard({ onEdit }: Props) {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          {regularProjects.length > 0 && (
-            <button
-              onClick={() => setConfirmClearAll(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 transition-colors"
-              title="Clear all costings in workspace"
-            >
-              <Trash2 size={15} />
-              Clear All Costings
-            </button>
-          )}
-
           <button
             onClick={createBlankCosting}
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors"
@@ -446,92 +388,16 @@ export function Dashboard({ onEdit }: Props) {
           </div>
         </div>
 
-        {/* Right 1 Col: Quick Estimator Scratchpad + Material Rates Preview */}
+        {/* Right 1 Col: Rough Estimator & Database Match + Material Rates Preview */}
         <div className="space-y-6">
-          {/* Quick Scratchpad Estimator */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <Hammer size={16} className="text-blue-600" />
-                Rough Estimator Scratchpad
-              </h3>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase">Interactive</span>
-            </div>
-            <p className="text-xs text-slate-500">
-              Enter dimensions below to calculate an instant material & selling cost estimate.
-            </p>
-
-            <div className="space-y-3 pt-1">
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">L (mm)</label>
-                  <input
-                    type="number"
-                    value={quickL}
-                    onChange={e => setQuickL(e.target.value)}
-                    placeholder="0"
-                    className="w-full px-2 py-1.5 border border-slate-200 rounded text-xs text-center font-mono focus:ring-1 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">W (mm)</label>
-                  <input
-                    type="number"
-                    value={quickW}
-                    onChange={e => setQuickW(e.target.value)}
-                    placeholder="0"
-                    className="w-full px-2 py-1.5 border border-slate-200 rounded text-xs text-center font-mono focus:ring-1 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">H (mm)</label>
-                  <input
-                    type="number"
-                    value={quickH}
-                    onChange={e => setQuickH(e.target.value)}
-                    placeholder="0"
-                    className="w-full px-2 py-1.5 border border-slate-200 rounded text-xs text-center font-mono focus:ring-1 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Primary Board Material</label>
-                <select
-                  value={quickRateId}
-                  onChange={e => setQuickRateId(e.target.value)}
-                  className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs bg-slate-50 focus:ring-1 focus:ring-blue-500 outline-none"
-                >
-                  {rates.map(r => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} (₹{r.rate}/{r.unit})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {scratchpadEstimate ? (
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1.5 text-xs">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Surface Area:</span>
-                    <span className="font-mono font-medium">{scratchpadEstimate.surfaceSqFt} sq.ft</span>
-                  </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>Est. Material & Labour:</span>
-                    <span className="font-mono">₹{(scratchpadEstimate.materialCost + scratchpadEstimate.labourCost).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-slate-900 border-t border-slate-200 pt-1.5 text-sm">
-                    <span>Est. Selling (inc. GST):</span>
-                    <span className="font-mono text-emerald-700">₹{scratchpadEstimate.estimatedTotal.toLocaleString('en-IN')}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-slate-50/70 p-3.5 rounded-lg border border-dashed border-slate-200 text-center text-xs text-slate-400">
-                  Enter dimensions (L, W, H) above to view cost estimate
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Rough Estimator & Database Match */}
+          <RoughEstimator
+            projects={projects}
+            rates={rates}
+            woodTypes={woodTypes}
+            settings={settings}
+            onEdit={onEdit}
+          />
 
           {/* Rate Master Quick Glance */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
@@ -589,17 +455,6 @@ export function Dashboard({ onEdit }: Props) {
             setProjectToDelete(null);
           }}
           onCancel={() => setProjectToDelete(null)}
-        />
-      )}
-
-      {/* Clear All Confirmation Modal */}
-      {confirmClearAll && (
-        <ConfirmModal
-          title="Clear All Costings"
-          message="Are you sure you want to delete all costing records in your workspace? This cannot be undone."
-          confirmText="Clear All"
-          onConfirm={handleClearAllCostings}
-          onCancel={() => setConfirmClearAll(false)}
         />
       )}
     </div>

@@ -4,7 +4,47 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { logAuditEvent } from '../services/AuditService';
 import { v4 as uuidv4 } from 'uuid';
-import { Building, CheckCircle, ShieldAlert, CreditCard, Search, X, ChevronRight, Terminal, UserSquare2, LogIn, Activity } from 'lucide-react';
+import { Building, CheckCircle, ShieldAlert, CreditCard, Search, X, ChevronRight, Terminal, UserSquare2, LogIn, Activity, Receipt } from 'lucide-react';
+
+export const getInvoiceSeriesNumber = (payment: any, allPaymentsList: any[] = []): string => {
+  if (payment?.invoiceNumber && typeof payment.invoiceNumber === 'string' && payment.invoiceNumber.trim()) {
+    return payment.invoiceNumber.trim().toUpperCase();
+  }
+  if (payment?.invoiceId && typeof payment.invoiceId === 'string' && /^PAY-\d+$/i.test(payment.invoiceId.trim())) {
+    return payment.invoiceId.trim().toUpperCase();
+  }
+
+  // Fallback: Deterministic series based on chronological sorting across all payments
+  if (allPaymentsList && allPaymentsList.length > 0) {
+    const sorted = [...allPaymentsList].sort((a, b) => {
+      const timeA = (a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.timestamp || 0));
+      const timeB = (b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.timestamp || 0));
+      return timeA - timeB;
+    });
+    const idx = sorted.findIndex(p => p.id === payment?.id);
+    if (idx !== -1) {
+      return `PAY-${1001 + idx}`;
+    }
+  }
+
+  return 'PAY-1001';
+};
+
+export const getNextInvoiceNumber = (allPaymentsList: any[] = []): string => {
+  let maxSeq = 1000;
+  allPaymentsList.forEach(p => {
+    const inv = p.invoiceNumber || p.invoiceId || '';
+    const match = String(inv).match(/PAY-(\d+)/i);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > maxSeq) maxSeq = num;
+    }
+  });
+  if (maxSeq === 1000 && allPaymentsList.length > 0) {
+    maxSeq = 1000 + allPaymentsList.length;
+  }
+  return `PAY-${maxSeq + 1}`;
+};
 
 export const SuperAdminDashboard: React.FC = () => {
   const { appUser } = useAuth();
@@ -24,6 +64,10 @@ export const SuperAdminDashboard: React.FC = () => {
   const [drawerTab, setDrawerTab] = useState<'overview' | 'subscription' | 'payments' | 'logins' | 'activity'>('overview');
   const [internalNote, setInternalNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+
+  // Payment Drawer Filters
+  const [paymentModeFilter, setPaymentModeFilter] = useState('All Modes');
+  const [paymentSortOrder, setPaymentSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -266,8 +310,11 @@ export const SuperAdminDashboard: React.FC = () => {
     if (!selectedTenant || !paymentAmount) return;
     setIsSubmittingPayment(true);
     try {
+      const generatedInvoiceNumber = getNextInvoiceNumber(payments);
       const paymentData = {
         tenantId: selectedTenant.id,
+        invoiceNumber: generatedInvoiceNumber,
+        invoiceId: generatedInvoiceNumber,
         amount: parseFloat(paymentAmount),
         mode: paymentMode,
         status: paymentStatus,
@@ -674,13 +721,22 @@ export const SuperAdminDashboard: React.FC = () => {
 
               <form onSubmit={handleAddPayment} className="space-y-4">
                 <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Invoice Number (Auto-Generated)</label>
+                  <div className="flex items-center gap-2 px-3.5 py-2.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm font-mono font-bold text-indigo-800">
+                    <Receipt size={16} className="text-indigo-600 shrink-0" />
+                    <span>{getNextInvoiceNumber(payments)}</span>
+                    <span className="text-[11px] font-normal text-indigo-600 ml-auto font-sans bg-white/80 px-2 py-0.5 rounded border border-indigo-100">PAY-1001 Series</span>
+                  </div>
+                </div>
+
+                <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Amount (₹)</label>
                   <input
                     type="number"
                     required
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
                     placeholder="e.g. 5000"
                   />
                 </div>
@@ -952,10 +1008,13 @@ export const SuperAdminDashboard: React.FC = () => {
               {drawerTab === 'payments' && (
                 <div className="space-y-6">
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-sm font-bold text-slate-800">Payment History</h3>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800">Payment History</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">Sequential invoices in PAY-1001 series</p>
+                    </div>
                     <button 
                       onClick={() => setShowPaymentModal(true)}
-                      className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
                     >
                       + Add Payment
                     </button>
@@ -963,11 +1022,24 @@ export const SuperAdminDashboard: React.FC = () => {
                   
                   <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                     <div className="p-4 border-b border-slate-100 flex gap-4">
-                      <select className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none">
-                        <option>All Modes</option>
+                      <select 
+                        value={paymentModeFilter}
+                        onChange={(e) => setPaymentModeFilter(e.target.value)}
+                        className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-medium outline-none bg-slate-50 text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="All Modes">All Modes</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Cash">Cash</option>
                       </select>
-                      <select className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none">
-                        <option>Date ↓</option>
+                      <select 
+                        value={paymentSortOrder}
+                        onChange={(e) => setPaymentSortOrder(e.target.value as 'desc' | 'asc')}
+                        className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-medium outline-none bg-slate-50 text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="desc">Date ↓ (Newest First)</option>
+                        <option value="asc">Date ↑ (Oldest First)</option>
                       </select>
                     </div>
                     <table className="w-full text-left text-sm">
@@ -981,21 +1053,44 @@ export const SuperAdminDashboard: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {payments.filter(p => p.tenantId === selectedTenant.id).length === 0 ? (
-                          <tr><td colSpan={5} className="p-6 text-center text-slate-400">No payment records found.</td></tr>
-                        ) : (
-                          payments.filter(p => p.tenantId === selectedTenant.id).map(p => (
-                            <tr key={p.id}>
-                              <td className="px-6 py-4 font-mono text-slate-500">{p.id.slice(0,8)}</td>
-                              <td className="px-6 py-4 text-slate-600">{new Date(p.timestamp || Date.now()).toLocaleDateString('en-GB')}</td>
-                              <td className="px-6 py-4 font-bold text-slate-900">₹{p.amount?.toLocaleString() || 0}</td>
-                              <td className="px-6 py-4 text-slate-600">{p.mode || 'Bank Transfer'}</td>
+                        {(() => {
+                          const tenantPayments = payments.filter(p => p.tenantId === selectedTenant.id);
+                          const filtered = tenantPayments.filter(p => {
+                            if (paymentModeFilter !== 'All Modes' && p.mode !== paymentModeFilter) return false;
+                            return true;
+                          });
+                          filtered.sort((a, b) => {
+                            const timeA = (a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.timestamp || 0));
+                            const timeB = (b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.timestamp || 0));
+                            return paymentSortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+                          });
+
+                          if (filtered.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={5} className="p-8 text-center text-slate-400 text-xs">
+                                  No payment records found matching the filter criteria.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return filtered.map(p => (
+                            <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
                               <td className="px-6 py-4">
-                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold tracking-wider uppercase">{p.status}</span>
+                                <span className="font-mono font-bold text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md tracking-wider">
+                                  {getInvoiceSeriesNumber(p, payments)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-slate-600 text-xs">{new Date(p.timestamp || Date.now()).toLocaleDateString('en-GB')}</td>
+                              <td className="px-6 py-4 font-bold text-slate-900 font-mono">₹{p.amount?.toLocaleString('en-IN') || 0}</td>
+                              <td className="px-6 py-4 text-slate-600 text-xs">{p.mode || 'Bank Transfer'}</td>
+                              <td className="px-6 py-4">
+                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded text-[10px] font-bold tracking-wider uppercase">{p.status}</span>
                               </td>
                             </tr>
-                          ))
-                        )}
+                          ));
+                        })()}
                       </tbody>
                     </table>
                   </div>

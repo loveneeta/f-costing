@@ -70,7 +70,19 @@ export const CompanyBilling: React.FC = () => {
           where('tenantId', '==', tenant.id)
         );
         const snap = await getDocs(q);
-        const fetchedPayments = snap.docs.map(d => ({ id: d.id, ...d.data() } as Payment));
+        const fetchedPayments = snap.docs.map(d => {
+          const data = d.data();
+          const inv = data.invoiceNumber || data.invoiceId || (data.timestamp ? `PAY-${1001}` : 'PAY-1001');
+          return {
+            id: d.id,
+            amount: data.amount || 0,
+            currency: data.currency || 'INR',
+            status: data.status || 'PAID',
+            date: data.date || (data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString()),
+            invoiceId: inv,
+            ...data
+          } as Payment;
+        });
         fetchedPayments.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
         setPayments(fetchedPayments.slice(0, 10));
       } catch (e) {
