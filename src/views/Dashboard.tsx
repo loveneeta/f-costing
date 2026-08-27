@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '../context/StoreContext';
-import { Calculator, Tags, Activity, FileText } from 'lucide-react';
+import { Calculator, Tags, Activity, FileText, Plus } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 import { Project } from '../types';
 
 interface Props {
@@ -14,7 +15,30 @@ export function Dashboard({ onEdit }: Props) {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-neutral-800 mb-6">Dashboard</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-neutral-800">Dashboard</h1>
+        <button 
+          onClick={() => onEdit({
+            id: uuidv4(),
+            dateCreated: new Date().toISOString(),
+            dateModified: new Date().toISOString(),
+            name: '',
+            category: '',
+            overallL: 0,
+            overallW: 0,
+            overallH: 0,
+            sheetComponents: [],
+            solidWoodComponents: [],
+            hardware: [],
+            finishing: [],
+            labour: [],
+            isTemplate: false
+          })}
+          className="bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700"
+        >
+          <Plus size={18} /> New Costing
+        </button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">

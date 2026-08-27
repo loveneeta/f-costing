@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Project } from '../types';
 import { calculateProjectCost } from '../engine';
-import { Edit2, Trash2, Copy } from 'lucide-react';
+import { Edit2, Trash2, Copy, Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfirmModal } from '../components/ConfirmModal';
 
@@ -31,6 +31,27 @@ export function CostingsList({ onEdit }: Props) {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-neutral-800">All Costings</h1>
+        <button 
+          onClick={() => onEdit({
+            id: uuidv4(),
+            dateCreated: new Date().toISOString(),
+            dateModified: new Date().toISOString(),
+            name: '',
+            category: '',
+            overallL: 0,
+            overallW: 0,
+            overallH: 0,
+            sheetComponents: [],
+            solidWoodComponents: [],
+            hardware: [],
+            finishing: [],
+            labour: [],
+            isTemplate: false
+          })}
+          className="bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700"
+        >
+          <Plus size={18} /> New Costing
+        </button>
       </div>
 
       <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">

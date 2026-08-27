@@ -95,6 +95,10 @@ export const Sidebar: React.FC = () => {
             <SectionHeader title="Rate Master" />
             <NavLink to="/rates/wood" icon={TreePine} label="Wood Rates" />
             <NavLink to="/rates/hardware" icon={Wrench} label="Hardware Rates" />
+            <NavLink to="/rates/veneer" icon={Layers} label="Veneer Rates" />
+            <NavLink to="/rates/ply" icon={FileBox} label="Ply Sheets" />
+            <NavLink to="/rates/board" icon={FileBox} label="Board Sheets" />
+            <NavLink to="/rates/other" icon={SettingsIcon} label="Other Rates" />
 
             <SectionHeader title="User" />
             <NavLink to="/profile" icon={SettingsIcon} label="Profile & Settings" />

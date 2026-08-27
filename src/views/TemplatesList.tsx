@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Project } from '../types';
 import { calculateProjectCost } from '../engine';
-import { Edit2, Trash2, Copy, FilePlus2 } from 'lucide-react';
+import { Edit2, Trash2, Copy, FilePlus2, Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfirmModal } from '../components/ConfirmModal';
 
@@ -35,6 +35,27 @@ export function TemplatesList({ onEdit, onUseTemplate }: Props) {
           <h1 className="text-2xl font-bold text-neutral-800">Item Templates</h1>
           <p className="text-sm text-neutral-500 mt-1">Manage pre-filled costings templates.</p>
         </div>
+        <button 
+          onClick={() => onEdit({
+            id: uuidv4(),
+            dateCreated: new Date().toISOString(),
+            dateModified: new Date().toISOString(),
+            name: 'New Template',
+            category: '',
+            overallL: 0,
+            overallW: 0,
+            overallH: 0,
+            sheetComponents: [],
+            solidWoodComponents: [],
+            hardware: [],
+            finishing: [],
+            labour: [],
+            isTemplate: true
+          })}
+          className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-indigo-700"
+        >
+          <Plus size={18} /> New Template
+        </button>
       </div>
       <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
         {templates.length === 0 ? (
