@@ -115,7 +115,7 @@ service cloud.firestore {
         isSuperAdmin() || 
         (
           isCompanyAdmin(tenantId) && 
-          !incoming().diff(existing()).affectedKeys().hasAny(['status', 'subscriptionPlan', 'createdBy', 'adminUserId', 'environment'])
+          !incoming().diff(existing()).affectedKeys().hasAny(['status', 'createdBy', 'adminUserId', 'environment'])
         )
       );
       
@@ -130,7 +130,9 @@ service cloud.firestore {
     
     match /subscriptions/{subId} {
       allow read: if isSuperAdmin() || (resource != null && isTenantMember(resource.data.tenantId));
-      allow write: if isSuperAdmin();
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin() || (isCompanyAdmin(resource.data.tenantId) && incoming().diff(existing()).affectedKeys().hasOnly(['planId', 'updatedAt']) && incoming().tenantId == resource.data.tenantId);
+      allow delete: if isSuperAdmin();
     }
     
     // ====== PAYMENTS & INVOICES ======
