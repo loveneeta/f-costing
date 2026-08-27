@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where, documentId } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { FileText, RefreshCw } from 'lucide-react';
 
@@ -12,7 +12,34 @@ export const SuperAdminAudit: React.FC = () => {
     try {
       const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(50));
       const snap = await getDocs(q);
-      setLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const rawLogs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      
+      const tenantIds = [...new Set(rawLogs.map(l => l.tenantId).filter(id => id && id !== 'SYSTEM'))];
+      const userIds = [...new Set(rawLogs.map(l => l.userId).filter(Boolean))];
+
+      const tenantMap = new Map();
+      const userMap = new Map();
+
+      for (let i = 0; i < tenantIds.length; i += 30) {
+        const chunk = tenantIds.slice(i, i + 30);
+        const tSnap = await getDocs(query(collection(db, 'tenants'), where(documentId(), 'in', chunk)));
+        tSnap.forEach(d => tenantMap.set(d.id, d.data().name));
+      }
+
+      for (let i = 0; i < userIds.length; i += 30) {
+        const chunk = userIds.slice(i, i + 30);
+        const uSnap = await getDocs(query(collection(db, 'users'), where(documentId(), 'in', chunk)));
+        uSnap.forEach(d => {
+           const uData = d.data();
+           userMap.set(d.id, uData.name || uData.email);
+        });
+      }
+
+      setLogs(rawLogs.map(l => ({
+        ...l,
+        tenantName: l.tenantId === 'SYSTEM' ? 'SYSTEM' : (tenantMap.get(l.tenantId) || l.tenantId),
+        userName: userMap.get(l.userId) || l.userId
+      })));
     } catch (e) {
       console.error(e);
     } finally {
@@ -65,10 +92,10 @@ export const SuperAdminAudit: React.FC = () => {
                 </tr>
               ) : logs.map(l => (
                 <tr key={l.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                  <td className="p-4 font-mono text-xs text-neutral-500">{new Date(l.timestamp).toLocaleString()}</td>
+                  <td className="p-4 font-mono text-xs text-neutral-500">{l.timestamp?.toDate ? l.timestamp.toDate().toLocaleString() : new Date(l.timestamp).toLocaleString()}</td>
                   <td className="p-4 font-medium text-neutral-900">{l.action}</td>
-                  <td className="p-4 font-mono text-xs text-neutral-500">{l.tenantId || 'SYSTEM'}</td>
-                  <td className="p-4 font-mono text-xs text-neutral-500">{l.userId}</td>
+                  <td className="p-4 font-mono text-xs text-neutral-500">{l.tenantName || l.tenantId || 'SYSTEM'}</td>
+                  <td className="p-4 font-mono text-xs text-neutral-500">{l.userName || l.userId}</td>
                   <td className="p-4 text-neutral-600">{l.entityType}</td>
                 </tr>
               ))}

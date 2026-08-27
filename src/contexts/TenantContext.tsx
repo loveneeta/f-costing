@@ -142,7 +142,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [appUser?.tenantId]);
 
-  const isTenantActive = tenant?.status === 'active' || tenant?.status === 'trial';
+  const isTenantActive = tenant?.status?.toLowerCase() === 'active' || tenant?.status?.toLowerCase() === 'trial';
 
   const canAccessFeature = (feature: string) => {
     if (!plan) return false;

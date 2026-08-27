@@ -33,7 +33,7 @@ export function Settings() {
     updateSettings({
       ...settings,
       company: {
-        ...settings.company,
+        ...(settings.company || {}),
         [name]: type === "checkbox" ? checked : value,
       },
     });
@@ -44,7 +44,7 @@ export function Settings() {
     updateSettings({
       ...settings,
       pricing: {
-        ...settings.pricing,
+        ...(settings.pricing || {}),
         [name]: parseFloat(value) || 0,
       },
     });
@@ -57,10 +57,10 @@ export function Settings() {
   const handleSaveCompanyProfile = async () => {
     try {
       await updateTenant({
-        name: settings.company.name,
-        email: settings.company.email,
-        phone: settings.company.phone,
-        address: settings.company.address,
+        name: (settings.company || {}).name,
+        email: (settings.company || {}).email,
+        phone: (settings.company || {}).phone,
+        address: (settings.company || {}).address,
         updatedAt: new Date().toISOString()
       });
       alert("Company profile saved successfully.");
@@ -117,7 +117,7 @@ export function Settings() {
                 BASE PROFIT
               </p>
               <h3 className="text-3xl font-bold text-neutral-900 mt-2">
-                {settings.pricing.profitPercent}
+                {(settings.pricing || {}).profitPercent}
                 <span className="text-lg text-neutral-400 font-normal">%</span>
               </h3>
               <p className="text-xs text-neutral-500 mt-2">
@@ -131,11 +131,11 @@ export function Settings() {
                 CASH REWARD
               </p>
               <h3 className="text-3xl font-bold text-neutral-900 mt-2">
-                {settings.pricing.cashDiscountPercent}
+                {(settings.pricing || {}).cashDiscountPercent}
                 <span className="text-lg text-neutral-400 font-normal">%</span>
               </h3>
               <p className="text-xs text-neutral-500 mt-2">
-                For payments cleared within {settings.pricing.validityDays}{" "}
+                For payments cleared within {(settings.pricing || {}).validityDays}{" "}
                 days.
               </p>
             </div>
@@ -146,11 +146,11 @@ export function Settings() {
                 VOLUME CAP
               </p>
               <h3 className="text-3xl font-bold text-neutral-900 mt-2">
-                {settings.pricing.volumeDiscountPercent}
+                {(settings.pricing || {}).volumeDiscountPercent}
                 <span className="text-lg text-neutral-400 font-normal">%</span>
               </h3>
               <p className="text-xs text-neutral-500 mt-2">
-                Threshold: ₹{settings.pricing.volumeThreshold.toLocaleString()}
+                Threshold: ₹{(settings.pricing || {}).volumeThreshold.toLocaleString()}
               </p>
             </div>
           </div>
@@ -185,7 +185,7 @@ export function Settings() {
                     <input
                       type="number"
                       name="profitPercent"
-                      value={settings.pricing.profitPercent}
+                      value={(settings.pricing || {}).profitPercent}
                       onChange={handlePricingChange}
                       className="w-full text-xl font-bold text-neutral-900 outline-none"
                     />
@@ -203,7 +203,7 @@ export function Settings() {
                     <input
                       type="number"
                       name="overheadPercent"
-                      value={settings.pricing.overheadPercent}
+                      value={(settings.pricing || {}).overheadPercent}
                       onChange={handlePricingChange}
                       className="w-full text-xl font-bold text-neutral-900 outline-none"
                     />
@@ -223,7 +223,7 @@ export function Settings() {
                     <input
                       type="number"
                       name="cashDiscountPercent"
-                      value={settings.pricing.cashDiscountPercent}
+                      value={(settings.pricing || {}).cashDiscountPercent}
                       onChange={handlePricingChange}
                       className="w-full text-xl font-bold text-neutral-900 outline-none bg-transparent"
                     />
@@ -238,7 +238,7 @@ export function Settings() {
                     <input
                       type="number"
                       name="validityDays"
-                      value={settings.pricing.validityDays}
+                      value={(settings.pricing || {}).validityDays}
                       onChange={handlePricingChange}
                       className="w-full text-xl font-bold text-neutral-900 outline-none bg-transparent"
                     />
@@ -289,7 +289,7 @@ export function Settings() {
                     <input
                       type="number"
                       name="volumeThreshold"
-                      value={settings.pricing.volumeThreshold}
+                      value={(settings.pricing || {}).volumeThreshold}
                       onChange={handlePricingChange}
                       className="w-full bg-transparent text-2xl font-bold text-white outline-none"
                     />
@@ -302,7 +302,7 @@ export function Settings() {
                   <input
                     type="number"
                     name="volumeDiscountPercent"
-                    value={settings.pricing.volumeDiscountPercent}
+                    value={(settings.pricing || {}).volumeDiscountPercent}
                     onChange={handlePricingChange}
                     className="w-full bg-transparent text-3xl font-bold text-white outline-none text-center"
                   />
@@ -318,7 +318,7 @@ export function Settings() {
                   <input
                     type="number"
                     name="wastagePercent"
-                    value={settings.pricing.wastagePercent}
+                    value={(settings.pricing || {}).wastagePercent}
                     onChange={handlePricingChange}
                     className="w-full bg-[#1a1f30] border border-neutral-800 rounded p-2 text-white outline-none text-sm"
                   />
@@ -330,7 +330,7 @@ export function Settings() {
                   <input
                     type="number"
                     name="gstPercent"
-                    value={settings.pricing.gstPercent}
+                    value={(settings.pricing || {}).gstPercent}
                     onChange={handlePricingChange}
                     className="w-full bg-[#1a1f30] border border-neutral-800 rounded p-2 text-white outline-none text-sm"
                   />
@@ -385,7 +385,7 @@ export function Settings() {
                 <input
                   type="text"
                   name="name"
-                  value={settings.company.name}
+                  value={(settings.company || {}).name}
                   onChange={handleCompanyChange}
                   className="w-full bg-transparent outline-none font-medium text-neutral-800 text-sm"
                   placeholder="Your Company Name"
@@ -401,7 +401,7 @@ export function Settings() {
                 <input
                   type="text"
                   name="gst"
-                  value={settings.company.gst}
+                  value={(settings.company || {}).gst}
                   onChange={handleCompanyChange}
                   className="w-full bg-transparent outline-none font-medium text-neutral-800 text-sm"
                   placeholder="e.g. 08AZHPM1603R1ZZ"
@@ -418,7 +418,7 @@ export function Settings() {
               <span className="text-neutral-400 mr-3 mt-0.5">📍</span>
               <textarea
                 name="address"
-                value={settings.company.address}
+                value={(settings.company || {}).address}
                 onChange={handleCompanyChange}
                 rows={3}
                 className="w-full bg-transparent outline-none font-medium text-neutral-800 text-sm resize-none"
@@ -437,7 +437,7 @@ export function Settings() {
                 <input
                   type="text"
                   name="phone"
-                  value={settings.company.phone}
+                  value={(settings.company || {}).phone}
                   onChange={handleCompanyChange}
                   className="w-full bg-transparent outline-none font-medium text-neutral-800 text-sm"
                   placeholder="+91 9000000000"
@@ -453,7 +453,7 @@ export function Settings() {
                 <input
                   type="text"
                   name="email"
-                  value={settings.company.email}
+                  value={(settings.company || {}).email}
                   onChange={handleCompanyChange}
                   className="w-full bg-transparent outline-none font-medium text-neutral-800 text-sm"
                   placeholder="mail@example.com"
@@ -470,7 +470,7 @@ export function Settings() {
               <span className="text-neutral-400 mr-3 mt-0.5">🏦</span>
               <textarea
                 name="bankDetails"
-                value={settings.company.bankDetails}
+                value={(settings.company || {}).bankDetails}
                 onChange={handleCompanyChange}
                 rows={3}
                 className="w-full bg-transparent outline-none font-medium text-neutral-800 text-sm resize-none"
@@ -488,7 +488,7 @@ export function Settings() {
                 <input
                   type="checkbox"
                   name="hideBankDetails"
-                  checked={settings.company.hideBankDetails}
+                  checked={(settings.company || {}).hideBankDetails}
                   onChange={handleCompanyChange}
                   className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                 />
@@ -498,7 +498,7 @@ export function Settings() {
                 <input
                   type="checkbox"
                   name="hideNotes"
-                  checked={settings.company.hideNotes}
+                  checked={(settings.company || {}).hideNotes}
                   onChange={handleCompanyChange}
                   className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                 />
@@ -508,7 +508,7 @@ export function Settings() {
                 <input
                   type="checkbox"
                   name="hideTerms"
-                  checked={settings.company.hideTerms}
+                  checked={(settings.company || {}).hideTerms}
                   onChange={handleCompanyChange}
                   className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                 />

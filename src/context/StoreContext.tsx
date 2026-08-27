@@ -120,7 +120,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setWoodTypes(loadedWoodTypes.length ? loadedWoodTypes : DEFAULT_WOOD_TYPES);
         
         if (!setSnap.empty) {
-          setSettings(setSnap.docs[0].data() as AppSettings);
+          const data = setSnap.docs[0].data() as Partial<AppSettings>;
+          setSettings({
+            ...DEFAULT_SETTINGS,
+            ...data,
+            company: { ...DEFAULT_SETTINGS.company, ...(data.company || {}) },
+            pricing: { ...DEFAULT_SETTINGS.pricing, ...(data.pricing || {}) }
+          });
         } else {
           setSettings(DEFAULT_SETTINGS);
         }
