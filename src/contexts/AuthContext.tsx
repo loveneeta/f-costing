@@ -392,12 +392,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (err: any) {
       // Record failed attempt
       try {
-        await addDoc(collection(db, "failed_logins"), {
+        await withTimeout(addDoc(collection(db, "failed_logins"), {
           email: cleanEmail,
           timestamp: serverTimestamp(),
           userAgent: navigator.userAgent,
           reason: err.code || "unknown",
-        });
+        }), 2000, "Failed login log timed out");
       } catch (e) {} // Ignore unauthenticated write errors if rules block it
       throw handleAuthError(err, "login");
     }
@@ -440,7 +440,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           where("email", "==", cleanEmail),
           where("status", "==", "pending")
         );
-        const invSnap = await getDocs(q);
+        const invSnap = await withTimeout(getDocs(q), 8000, "Invitation check timed out");
         if (invSnap.empty) {
           throw new Error("Invitation is invalid or expired.");
         }
@@ -452,7 +452,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         
         console.log("Updating invitation status...");
         try {
-          await updateDoc(invitation.ref, { status: "accepted" });
+          await withTimeout(updateDoc(invitation.ref, { status: "accepted" }), 5000, "Update invite timed out");
         } catch (updateInvErr) {
           console.error("Failed to update invitation doc:", updateInvErr);
           // throw updateInvErr; // Swallowing error so user can still login if rule fails
@@ -474,7 +474,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           settings: {},
           createdAt: new Date().toISOString(),
         };
-        await setDoc(doc(db, "tenants", tenantId), newTenant);
+        await withTimeout(setDoc(doc(db, "tenants", tenantId), newTenant), 8000, "Tenant creation timed out");
 
         await logAuditEvent(tenantId, cred.user.uid, {
           action: "tenant.create",
@@ -499,7 +499,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const userDocRef = doc(db, "users", cred.user.uid);
       console.log("Creating user doc...");
       try {
-        await setDoc(userDocRef, userDocData, { merge: true });
+        await withTimeout(setDoc(userDocRef, userDocData, { merge: true }), 8000, "User doc creation timed out");
       } catch (setUserErr) {
         console.error("Failed to set user doc:", setUserErr);
         throw setUserErr;
@@ -560,10 +560,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const sessionId = localStorage.getItem("erp_session_id");
       if (sessionId) {
         try {
-          await updateDoc(
+          await withTimeout(updateDoc(
             doc(db, "users", auth.currentUser.uid, "sessions", sessionId),
             { status: "revoked" },
-          );
+          ), 5000, "Logout session update timed out");
         } catch (e) {}
       }
       try {
@@ -588,7 +588,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         collection(db, "users", auth.currentUser.uid, "sessions"),
         where("status", "==", "active"),
       );
-      const snapshot = await getDocs(q);
+      const snapshot = await withTimeout(getDocs(q), 5000, "Get sessions timed out");
 
       const updatePromises = snapshot.docs.map((sessionDoc) =>
         updateDoc(
@@ -621,7 +621,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const uid = auth.currentUser.uid;
       const tenantId = appUser?.tenantId || null;
       
-      await deleteDoc(doc(db, "users", uid));
+      await withTimeout(deleteDoc(doc(db, "users", uid)), 5000, "Delete user doc timed out");
       
       try {
         await logAuditEvent(tenantId, uid, {
