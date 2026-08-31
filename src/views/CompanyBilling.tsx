@@ -1,9 +1,13 @@
+import { FEATURES_REGISTRY } from '../config/features';
 import React, { useEffect, useState } from 'react';
 import { collection, query, getDocs, where, orderBy, limit, updateDoc, doc } from 'firebase/firestore';
 import { SubscriptionPlan } from '../contexts/TenantContext';
 import { X, Check } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { useTenant } from '../contexts/TenantContext';
+import { useStore } from '../context/StoreContext';
+import { CompanySettings } from '../types';
+import { Save } from 'lucide-react';
 import { FileBox, CreditCard, AlertCircle } from 'lucide-react';
 
 interface Payment {
@@ -16,13 +20,62 @@ interface Payment {
 }
 
 export const CompanyBilling: React.FC = () => {
-  const { tenant, plan, subscription, loading: tenantLoading } = useTenant();
+  const { tenant, plan, subscription, loading: tenantLoading, updateTenant } = useTenant();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [updating, setUpdating] = useState(false);
+  const { settings, updateSettings } = useStore();
+
+  
+  
+  const handleCompanyChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value, type } = e.target;
+    let checked = false;
+    if (type === "checkbox") {
+      checked = (e.target as HTMLInputElement).checked;
+    }
+    const defaultCompany = {
+      name: '',
+      gst: '',
+      address: '',
+      phone: '',
+      email: '',
+      bankDetails: '',
+      hideBankDetails: false,
+      hideNotes: false,
+      hideTerms: false,
+    };
+    updateSettings({
+      ...settings,
+      company: {
+        ...defaultCompany,
+        ...(settings.company || {}),
+        [name]: type === "checkbox" ? checked : value,
+      },
+    });
+  };
+
+  const handleSaveCompanyProfile = async () => {
+    try {
+      await updateTenant({
+        name: (settings.company || {}).name,
+        email: (settings.company || {}).email,
+        phone: (settings.company || {}).phone,
+        address: (settings.company || {}).address,
+        updatedAt: new Date().toISOString()
+      });
+      alert("Company profile saved successfully.");
+    } catch (err) {
+      alert("Failed to save company profile.");
+    }
+  };
+
+
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -105,8 +158,175 @@ export const CompanyBilling: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto pb-16">
+
+      {/* Company Profile Card */}
+      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              Company Profile
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500">
+              This information will appear at the top of your quotations.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Company Name
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">🏢</span>
+                <input
+                  type="text"
+                  name="name"
+                  value={(settings.company || {}).name || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="e.g. ARORA EXITO"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                GST Number
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">📄</span>
+                <input
+                  type="text"
+                  name="gst"
+                  value={(settings.company || {}).gst || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="e.g. 08AZHPM1603R1ZZ"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Address
+            </label>
+            <div className="flex items-start border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+              <span className="text-slate-400 mr-2.5 mt-0.5 text-sm">📍</span>
+              <textarea
+                name="address"
+                value={(settings.company || {}).address || ''}
+                onChange={handleCompanyChange}
+                rows={2}
+                className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm resize-none"
+                placeholder="Full registered address..."
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Phone Number
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">📞</span>
+                <input
+                  type="text"
+                  name="phone"
+                  value={(settings.company || {}).phone || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="+91 9000000000"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Email Address
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">✉️</span>
+                <input
+                  type="text"
+                  name="email"
+                  value={(settings.company || {}).email || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="mail@example.com"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Bank Details (Optional)
+            </label>
+            <div className="flex items-start border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+              <span className="text-slate-400 mr-2.5 mt-0.5 text-sm">🏦</span>
+              <textarea
+                name="bankDetails"
+                value={(settings.company || {}).bankDetails || ''}
+                onChange={handleCompanyChange}
+                rows={2}
+                className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm resize-none"
+                placeholder="Bank Name, Account Number, IFSC..."
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
+              Print Settings
+            </label>
+            <div className="space-y-2.5 p-3.5 sm:p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <label className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer min-h-[36px]">
+                <input
+                  type="checkbox"
+                  name="hideBankDetails"
+                  checked={(settings.company || {}).hideBankDetails || false}
+                  onChange={handleCompanyChange}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                Hide Bank Details on Prints
+              </label>
+              <label className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer min-h-[36px]">
+                <input
+                  type="checkbox"
+                  name="hideNotes"
+                  checked={(settings.company || {}).hideNotes || false}
+                  onChange={handleCompanyChange}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                Hide Notes on Prints
+              </label>
+              <label className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer min-h-[36px]">
+                <input
+                  type="checkbox"
+                  name="hideTerms"
+                  checked={(settings.company || {}).hideTerms || false}
+                  onChange={handleCompanyChange}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                Hide Terms on Prints
+              </label>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+          <button
+            onClick={handleSaveCompanyProfile}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0f1423] text-white rounded-xl hover:bg-neutral-800 text-xs sm:text-sm font-bold shadow-md transition-all"
+          >
+            <Save size={15} /> Save Company Profile
+          </button>
+        </div>
+      </section>
+
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Billing & Subscription</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Company Details</h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
           Manage your plan, limits, and view payment history.
         </p>
@@ -253,7 +473,7 @@ export const CompanyBilling: React.FC = () => {
                         {(p.features || []).map(f => (
                           <div key={f} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
                             <Check size={15} className="text-emerald-600 shrink-0" />
-                            <span className="capitalize">{f.replace('_', ' ')}</span>
+                            <span className="capitalize">{FEATURES_REGISTRY[f]?.name || f}</span>
                           </div>
                         ))}
                       </div>

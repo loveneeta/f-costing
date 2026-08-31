@@ -60,7 +60,8 @@ export const TENANT_NAV_SECTIONS: NavSectionConfig[] = [
         shortLabel: 'Costings',
         icon: FolderOpen,
         section: 'Workspace',
-        isPrimaryBottomNav: true
+        isPrimaryBottomNav: true,
+        requiredFeature: 'projects'
       },
       {
         to: '/templates',
@@ -82,12 +83,13 @@ export const TENANT_NAV_SECTIONS: NavSectionConfig[] = [
         shortLabel: 'Employees',
         icon: Users,
         section: 'Company',
-        requiredPermission: 'employees.view'
+        requiredPermission: 'employees.view',
+        requiredFeature: 'employees'
       },
       {
         to: '/billing',
-        label: 'Billing & Subscription',
-        shortLabel: 'Billing',
+        label: 'Company Details',
+        shortLabel: 'Company',
         icon: CreditCard,
         section: 'Company',
         requiredPermission: 'subscription.view'
@@ -102,42 +104,48 @@ export const TENANT_NAV_SECTIONS: NavSectionConfig[] = [
         label: 'Wood Rates',
         shortLabel: 'Wood',
         icon: TreePine,
-        section: 'Rate Master'
+        section: 'Rate Master',
+        requiredFeature: 'wood_rates'
       },
       {
         to: '/rates/hardware',
         label: 'Hardware Rates',
         shortLabel: 'Hardware',
         icon: Wrench,
-        section: 'Rate Master'
+        section: 'Rate Master',
+        requiredFeature: 'hardware_rates'
       },
       {
         to: '/rates/veneer',
         label: 'Veneer Rates',
         shortLabel: 'Veneer',
         icon: Layers,
-        section: 'Rate Master'
+        section: 'Rate Master',
+        requiredFeature: 'veneer_rates'
       },
       {
         to: '/rates/ply',
         label: 'Ply Sheets',
         shortLabel: 'Ply',
         icon: FileBox,
-        section: 'Rate Master'
+        section: 'Rate Master',
+        requiredFeature: 'ply_sheets'
       },
       {
         to: '/rates/board',
         label: 'Board Sheets',
         shortLabel: 'Board',
         icon: FileBox,
-        section: 'Rate Master'
+        section: 'Rate Master',
+        requiredFeature: 'board_sheets'
       },
       {
         to: '/rates/other',
         label: 'Other Rates',
         shortLabel: 'Other',
         icon: SettingsIcon,
-        section: 'Rate Master'
+        section: 'Rate Master',
+        requiredFeature: 'other_rates'
       }
     ]
   },

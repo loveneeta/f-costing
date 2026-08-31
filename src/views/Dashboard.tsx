@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
+import { useTenant } from '../contexts/TenantContext';
 import { calculateProjectCost } from '../engine';
 import { 
   FileText, 
@@ -27,9 +28,18 @@ interface Props {
 
 export function Dashboard({ onEdit }: Props) {
   const { projects, rates, woodTypes, settings, addProject, deleteProject } = useStore();
+  const { canAccessFeature } = useTenant();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const allowedRates = rates.filter(r => {
+    if (r.category === 'solid_wood') return canAccessFeature('wood_rates');
+    if (r.category === 'hardware') return canAccessFeature('hardware_rates');
+    if (r.category === 'veneer_sheet' || r.category === 'veneer_edge' || r.category === 'veneer_other') return canAccessFeature('veneer_rates');
+    if (r.category === 'ply') return canAccessFeature('ply_sheets');
+    if (r.category === 'board') return canAccessFeature('board_sheets');
+    return canAccessFeature('other_rates');
+  });
   const [projectToUpdatePricing, setProjectToUpdatePricing] = useState<Project | null>(null);
 
   const regularProjects = useMemo(() => projects.filter(p => !p.isTemplate), [projects]);
@@ -474,16 +484,16 @@ export function Dashboard({ onEdit }: Props) {
                 <Tags size={16} className="text-purple-600" />
                 Active Material Rates
               </h3>
-              <span className="text-[11px] text-purple-600 font-bold">{rates.length} configured</span>
+              <span className="text-[11px] text-purple-600 font-bold">{allowedRates.length} configured</span>
             </div>
 
-            {rates.length === 0 ? (
+            {allowedRates.length === 0 ? (
               <div className="py-4 text-center text-xs text-slate-400">
                 No material rates configured
               </div>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto divide-y divide-slate-100">
-                {rates.slice(0, 5).map(r => (
+                {allowedRates.slice(0, 5).map(r => (
                   <div key={r.id} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
                     <div className="truncate pr-2">
                       <p className="font-medium text-slate-800 truncate">{r.name}</p>

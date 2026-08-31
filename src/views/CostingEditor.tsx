@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
+import { useTenant } from '../contexts/TenantContext';
 import { Project } from '../types';
 import { calculateProjectCost, compareProjectRates } from '../engine';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,6 +34,7 @@ interface Props {
 
 export function CostingEditor({ project: initialProject, onClose }: Props) {
   const { rates, woodTypes, settings, updateProject, addProject, projects } = useStore();
+  const { canAccessFeature } = useTenant();
   
   const [project, setProject] = useState<Project>(initialProject);
   const [successModal, setSuccessModal] = useState<{show: boolean, title: string, sub?: string}>({show: false, title: ''});
@@ -379,8 +381,10 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
               </div>
             </section>
 
-            {/* 2. Sheet Material Parts Section */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
+            {(canAccessFeature('ply_sheets') || canAccessFeature('board_sheets')) && (
+            <>
+              {/* 2. Sheet Material Parts Section */}
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
               <div className="p-3.5 sm:p-4 md:px-6 border-b border-slate-100 flex justify-between items-center bg-white">
                 <div className="flex items-center gap-2 min-w-0">
                   <Layers className="text-indigo-600 shrink-0" size={18} />
@@ -704,9 +708,13 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                 </>
               )}
             </section>
+            </>
+          )}
 
-            {/* 3. Solid Wood Parts Section */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
+          {canAccessFeature('wood_rates') && (
+            <>
+              {/* 3. Solid Wood Parts Section */}
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
               <div className="p-3.5 sm:p-4 md:px-6 border-b border-slate-100 flex justify-between items-center bg-white">
                 <div className="flex items-center gap-2 min-w-0">
                   <TreePine className="text-emerald-600 shrink-0" size={18} />
@@ -954,7 +962,12 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
               )}
             </section>
 
-            {/* 4. Hardware Section */}
+                        </>
+          )}
+
+          {canAccessFeature('hardware_rates') && (
+            <>
+              {/* 4. Hardware Section */}
             <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
               <div className="p-3.5 sm:p-4 md:px-6 border-b border-slate-100 flex justify-between items-center bg-white">
                 <div className="flex items-center gap-2 min-w-0">
@@ -1118,9 +1131,13 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                 </>
               )}
             </section>
+            </>
+          )}
 
-            {/* 5. Finishing (Polish / Paint) Section */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
+          {canAccessFeature('other_rates') && (
+            <>
+              {/* 5. Finishing (Polish / Paint) Section */}
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
               <div className="p-3.5 sm:p-4 md:px-6 border-b border-slate-100 flex justify-between items-center bg-white">
                 <div className="flex items-center gap-2 min-w-0">
                   <Paintbrush className="text-purple-600 shrink-0" size={18} />
@@ -1283,9 +1300,13 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                 </>
               )}
             </section>
+            </>
+          )}
 
-            {/* 6. Labour & Services Section */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
+          {canAccessFeature('other_rates') && (
+            <>
+              {/* 6. Labour & Services Section */}
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
               <div className="p-3.5 sm:p-4 md:px-6 border-b border-slate-100 flex justify-between items-center bg-white">
                 <div className="flex items-center gap-2 min-w-0">
                   <HardHat className="text-blue-600 shrink-0" size={18} />
@@ -1469,6 +1490,8 @@ export function CostingEditor({ project: initialProject, onClose }: Props) {
                 </>
               )}
             </section>
+            </>
+          )}
 
           </div>
           <Footer className="mt-8 border-t-0 rounded-xl bg-white/70 border border-slate-200/80" />

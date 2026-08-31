@@ -1,94 +1,217 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/views/CompanyBilling.tsx', 'utf8');
+let billingCode = fs.readFileSync('src/views/CompanyBilling.tsx', 'utf8');
 
-// I will just replace the modal block entirely to fix the divs.
-const target = `        </div>
-      )}
-    </div>
+const handleCompanyChange = `
+  const handleCompanyChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value, type } = e.target;
+    let checked = false;
+    if (type === "checkbox") {
+      checked = (e.target as HTMLInputElement).checked;
+    }
+    const defaultCompany = {
+      name: '',
+      gst: '',
+      address: '',
+      phone: '',
+      email: '',
+      bankDetails: '',
+      hideBankDetails: false,
+      hideNotes: false,
+      hideTerms: false,
+    };
+    updateSettings({
+      ...settings,
+      company: {
+        ...defaultCompany,
+        ...(settings.company || {}),
+        [name]: type === "checkbox" ? checked : value,
+      },
+    });
+  };
+`;
+
+if (!billingCode.includes('const handleCompanyChange')) {
+  billingCode = billingCode.replace(
+    'const handleSaveCompanyProfile = async () => {',
+    handleCompanyChange + '\n  const handleSaveCompanyProfile = async () => {'
   );
-};`;
+}
 
-const replacement = `      </div>
+const companyProfileJSX = `
+      {/* Company Profile Card */}
+      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              Company Profile
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500">
+              This information will appear at the top of your quotations.
+            </p>
+          </div>
+        </div>
 
-      {showPlanModal && (
-        <div className="fixed inset-0 bg-neutral-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-neutral-100 flex justify-between items-center sticky top-0 bg-white">
-              <h2 className="text-xl font-bold text-neutral-900">Change Subscription Plan</h2>
-              <button onClick={() => setShowPlanModal(false)} className="text-neutral-400 hover:text-neutral-600">
-                <X size={24} />
-              </button>
+        <div className="p-4 sm:p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Company Name
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">🏢</span>
+                <input
+                  type="text"
+                  name="name"
+                  value={(settings.company || {}).name || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="e.g. ARORA EXITO"
+                />
+              </div>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {plans.map(p => (
-                  <div key={p.id} className={\`border \${plan?.id === p.id ? 'border-blue-600 ring-1 ring-blue-600' : 'border-neutral-200'} rounded-xl p-6 relative flex flex-col\`}>
-                    {plan?.id === p.id && (
-                      <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase tracking-wider">
-                        Current
-                      </div>
-                    )}
-                    <h3 className="text-lg font-bold text-neutral-900 mb-2">{p.name}</h3>
-                    <p className="text-sm text-neutral-500 mb-4 flex-1">{p.description}</p>
-                    <div className="mb-6">
-                      <span className="text-3xl font-bold text-neutral-900">₹{p.price}</span>
-                      <span className="text-sm text-neutral-500">/{p.billingInterval}</span>
-                    </div>
-                    
-                    <div className="space-y-3 mb-8">
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <Check size={16} className="text-emerald-500" />
-                        <span>{p.limits?.users || 'Unlimited'} Users</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <Check size={16} className="text-emerald-500" />
-                        <span>{p.limits?.employees || 'Unlimited'} Employees</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <Check size={16} className="text-emerald-500" />
-                        <span>{p.limits?.storage || 'Unlimited'} GB Storage</span>
-                      </div>
-                      {(p.features || []).map(f => (
-                        <div key={f} className="flex items-center gap-2 text-sm text-neutral-600">
-                          <Check size={16} className="text-emerald-500" />
-                          <span className="capitalize">{f.replace('_', ' ')}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => handleSwitchPlan(p.id)}
-                      disabled={plan?.id === p.id || updating}
-                      className={\`w-full py-2.5 rounded-lg text-sm font-medium transition-colors \${
-                        plan?.id === p.id 
-                          ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
-                      }\`}
-                    >
-                      {updating && plan?.id !== p.id ? 'Updating...' : plan?.id === p.id ? 'Current Plan' : 'Switch to ' + p.name}
-                    </button>
-                  </div>
-                ))}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                GST Number
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">📄</span>
+                <input
+                  type="text"
+                  name="gst"
+                  value={(settings.company || {}).gst || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="e.g. 08AZHPM1603R1ZZ"
+                />
               </div>
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Address
+            </label>
+            <div className="flex items-start border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+              <span className="text-slate-400 mr-2.5 mt-0.5 text-sm">📍</span>
+              <textarea
+                name="address"
+                value={(settings.company || {}).address || ''}
+                onChange={handleCompanyChange}
+                rows={2}
+                className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm resize-none"
+                placeholder="Full registered address..."
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Phone Number
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">📞</span>
+                <input
+                  type="text"
+                  name="phone"
+                  value={(settings.company || {}).phone || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="+91 9000000000"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Email Address
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <span className="text-slate-400 mr-2.5 text-sm">✉️</span>
+                <input
+                  type="text"
+                  name="email"
+                  value={(settings.company || {}).email || ''}
+                  onChange={handleCompanyChange}
+                  className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm"
+                  placeholder="mail@example.com"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Bank Details (Optional)
+            </label>
+            <div className="flex items-start border border-slate-200 rounded-xl p-2.5 sm:p-3 bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+              <span className="text-slate-400 mr-2.5 mt-0.5 text-sm">🏦</span>
+              <textarea
+                name="bankDetails"
+                value={(settings.company || {}).bankDetails || ''}
+                onChange={handleCompanyChange}
+                rows={2}
+                className="w-full bg-transparent outline-none font-medium text-slate-900 text-xs sm:text-sm resize-none"
+                placeholder="Bank Name, Account Number, IFSC..."
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
+              Print Settings
+            </label>
+            <div className="space-y-2.5 p-3.5 sm:p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <label className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer min-h-[36px]">
+                <input
+                  type="checkbox"
+                  name="hideBankDetails"
+                  checked={(settings.company || {}).hideBankDetails || false}
+                  onChange={handleCompanyChange}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                Hide Bank Details on Prints
+              </label>
+              <label className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer min-h-[36px]">
+                <input
+                  type="checkbox"
+                  name="hideNotes"
+                  checked={(settings.company || {}).hideNotes || false}
+                  onChange={handleCompanyChange}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                Hide Notes on Prints
+              </label>
+              <label className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer min-h-[36px]">
+                <input
+                  type="checkbox"
+                  name="hideTerms"
+                  checked={(settings.company || {}).hideTerms || false}
+                  onChange={handleCompanyChange}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                Hide Terms on Prints
+              </label>
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+          <button
+            onClick={handleSaveCompanyProfile}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0f1423] text-white rounded-xl hover:bg-neutral-800 text-xs sm:text-sm font-bold shadow-md transition-all"
+          >
+            <Save size={15} /> Save Company Profile
+          </button>
+        </div>
+      </section>
+`;
+
+if (!billingCode.includes('Company Profile Card')) {
+  billingCode = billingCode.replace(
+    '<div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto pb-16">',
+    '<div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto pb-16">\n' + companyProfileJSX
   );
-};`;
-
-code = code.replace(
-  /      \}\)\s*\}?\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*\}\)\s*\}\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*\}\)\s*<\/div>\s*\);\s*\};/g,
-  ""
-);
-
-// I will just use string manipulation to find the index of "{showPlanModal" and replace everything after it.
-const modalIndex = code.indexOf("{showPlanModal && (");
-if (modalIndex !== -1) {
-  code = code.substring(0, modalIndex);
-  code += replacement;
 }
 
-fs.writeFileSync('src/views/CompanyBilling.tsx', code);
-console.log('Success!');
+fs.writeFileSync('src/views/CompanyBilling.tsx', billingCode);

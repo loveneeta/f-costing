@@ -7,15 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../contexts/AuthContext';
 import { logAuditEvent } from '../services/AuditService';
 
-const AVAILABLE_FEATURES = [
-  "costing",
-  "projects",
-  "templates",
-  "employees",
-  "wood_rates",
-  "hardware_rates",
-  "reports"
-];
+import { AVAILABLE_FEATURES, FEATURES_REGISTRY } from '../config/features';
 
 export const SuperAdminSubscriptions: React.FC = () => {
   const { appUser } = useAuth();
@@ -331,7 +323,7 @@ export const SuperAdminSubscriptions: React.FC = () => {
                           onClick={() => toggleFeature(feature)}
                           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${isEnabled ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50'}`}
                         >
-                          {feature.replace('_', ' ')}
+                          {FEATURES_REGISTRY[feature]?.name || feature}
                         </button>
                       );
                     })}
