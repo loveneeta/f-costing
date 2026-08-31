@@ -30,6 +30,15 @@ import { auth, db } from "../lib/firebase";
 import { v4 as uuidv4 } from "uuid";
 import { logAuditEvent } from "../services/AuditService";
 
+
+function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage = "Operation timed out"): Promise<T> {
+  let timer: any;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(errorMessage)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
 export interface AppUser {
   uid: string;
   email: string;
@@ -210,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             collection(db, "subscriptions"),
             where("tenantId", "==", data.tenantId)
           );
-          const subsSnap = await getDocs(subsQuery);
+          const subsSnap = await withTimeout(getDocs(subsQuery), 5000, "Subscription fetch timed out.");
           if (!subsSnap.empty) {
             const sub = subsSnap.docs[0].data();
             let isExpired = false;
@@ -302,7 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
-        await fetchUserDoc(firebaseUser);
+        await withTimeout(fetchUserDoc(firebaseUser), 10000, "Auth state fetch timed out.").catch(e => console.warn(e));
       } else {
         setAppUser(null);
       }
@@ -348,7 +357,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       console.log(`[AuthContext] Executing login attempt`);
       const cred = await withAuthRetry(() =>
-        signInWithEmailAndPassword(auth, cleanEmail, pass),
+        withTimeout(signInWithEmailAndPassword(auth, cleanEmail, pass), 10000, "Sign-in request timed out"),
       );
 
       if (!cred.user.emailVerified && cred.user.email?.includes("@")) {
@@ -356,11 +365,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // console.warn("Email not verified yet.");
       }
 
-      const userDoc = await fetchUserDoc(cred.user);
+      const userDoc = await withTimeout(fetchUserDoc(cred.user), 8000, "User profile fetch timed out. The network might be blocking Firestore.");
 
       // Create session
       try {
-        const sessionRef = await addDoc(
+        const sessionRef = await withTimeout(addDoc(
           collection(db, "users", cred.user.uid, "sessions"),
           {
             userAgent: navigator.userAgent,
@@ -368,7 +377,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             lastActivity: new Date().toISOString(),
             status: "active",
           },
-        );
+        ), 5000, "Session creation timed out.");
         localStorage.setItem("erp_session_id", sessionRef.id);
 
         await logAuditEvent(userDoc?.tenantId || null, cred.user.uid, {
