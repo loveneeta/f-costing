@@ -71,6 +71,7 @@ export function handleAuthError(
 
   const isUserCredentialError = [
     "auth/invalid-credential",
+    "auth/invalid-login-credentials",
     "auth/user-not-found",
     "auth/wrong-password",
     "auth/invalid-email",
@@ -98,6 +99,7 @@ export function handleAuthError(
       'An account with this email address already exists. Please switch to "Sign In" or click "Forgot password?" to reset your password.';
   } else if (
     code === "auth/invalid-credential" ||
+    code === "auth/invalid-login-credentials" ||
     code === "auth/user-not-found" ||
     code === "auth/wrong-password"
   ) {
