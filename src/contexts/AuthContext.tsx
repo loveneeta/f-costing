@@ -11,6 +11,7 @@ import {
   updatePassword as firebaseUpdatePassword,
   EmailAuthProvider,
   reauthenticateWithCredential,
+  deleteUser,
 } from "firebase/auth";
 import {
   doc,
@@ -23,6 +24,7 @@ import {
   query,
   where,
   getDocs,
+  deleteDoc,
 } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import { v4 as uuidv4 } from "uuid";
@@ -58,8 +60,19 @@ export function handleAuthError(
   const rawMessage =
     err?.message || "An unexpected authentication error occurred.";
 
-  // Log detailed diagnostic information for troubleshooting without leaking secrets in UI
-  console.error(
+  const isUserCredentialError = [
+    "auth/invalid-credential",
+    "auth/user-not-found",
+    "auth/wrong-password",
+    "auth/invalid-email",
+    "auth/email-already-in-use",
+    "auth/weak-password"
+  ].includes(code);
+
+  const logFn = isUserCredentialError ? console.warn : console.error;
+
+  // Log diagnostic information for troubleshooting
+  logFn(
     `[AuthContext Diagnostic Log] Action: ${action} | Code: ${code} | Details:`,
     {
       code,
@@ -84,7 +97,7 @@ export function handleAuthError(
         "If an account exists with this email address, a password reset link has been sent. Please check your inbox.";
     } else {
       userFriendlyMessage =
-        'Invalid email address or password. Please verify your credentials or click "Forgot password?".';
+        'Invalid email address or password. Please verify your credentials, click "Forgot password?", or select "Register New" to create a workspace.';
     }
   } else if (code === "auth/invalid-email") {
     userFriendlyMessage = "Please enter a valid email address.";
@@ -128,6 +141,7 @@ interface AuthContextType {
   register: (params: RegisterParams) => Promise<AppUser>;
   resetPassword: (email: string) => Promise<void>;
   changePassword: (currentPass: string, newPass: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
   logout: () => Promise<void>;
   logoutAllSessions: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
@@ -332,7 +346,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (email: string, pass: string): Promise<void> => {
     const cleanEmail = email.trim().toLowerCase();
     try {
-      console.log(`[AuthContext] Executing login for: ${cleanEmail}`);
+      console.log(`[AuthContext] Executing login attempt`);
       const cred = await withAuthRetry(() =>
         signInWithEmailAndPassword(auth, cleanEmail, pass),
       );
@@ -383,7 +397,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const register = async (params: RegisterParams): Promise<AppUser> => {
     const cleanEmail = params.email.trim().toLowerCase();
     try {
-      console.log(`[AuthContext] Executing registration for: ${cleanEmail}`);
+      console.log(`[AuthContext] Executing registration attempt`);
       let cred;
       try {
         cred = await withAuthRetry(() =>
@@ -474,7 +488,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       const userDocRef = doc(db, "users", cred.user.uid);
-      console.log("Creating user doc...", userDocData);
+      console.log("Creating user doc...");
       try {
         await setDoc(userDocRef, userDocData, { merge: true });
       } catch (setUserErr) {
@@ -520,11 +534,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     try {
       console.log(
-        `[AuthContext] Sending password reset email to: ${cleanEmail}`,
+        `[AuthContext] Sending password reset email`,
       );
       await withAuthRetry(() => sendPasswordResetEmail(auth, cleanEmail));
       console.log(
-        `[AuthContext] Password reset email dispatched successfully to: ${cleanEmail}`,
+        `[AuthContext] Password reset email dispatched successfully`,
       );
     } catch (err: any) {
       throw handleAuthError(err, "reset-password");
@@ -592,6 +606,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const deleteAccount = async () => {
+    if (!auth.currentUser) return;
+    try {
+      const uid = auth.currentUser.uid;
+      const tenantId = appUser?.tenantId || null;
+      
+      await deleteDoc(doc(db, "users", uid));
+      
+      try {
+        await logAuditEvent(tenantId, uid, {
+          action: "user.delete_account",
+          entityType: "user",
+          entityId: uid,
+          humanReadableDescription: "User permanently deleted their account.",
+        });
+      } catch (e) {}
+      
+      await deleteUser(auth.currentUser);
+      localStorage.removeItem("erp_session_id");
+      setUser(null);
+      setAppUser(null);
+    } catch (error: any) {
+      if (error.code === 'auth/requires-recent-login') {
+        throw new Error("For security reasons, please log out and log back in before deleting your account.");
+      }
+      throw error;
+    }
+  };
+
   const resendVerificationEmail = async () => {
     if (auth.currentUser) {
       await sendEmailVerification(auth.currentUser);
@@ -646,6 +689,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         register,
         resetPassword,
         changePassword,
+        deleteAccount,
         logout,
         logoutAllSessions,
         hasPermission,

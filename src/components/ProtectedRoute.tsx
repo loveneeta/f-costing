@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
   requireSuperAdmin?: boolean;
   requireAdmin?: boolean;
   requiredPermission?: string;
+  requiredFeature?: string;
   requireActiveTenant?: boolean;
 }
 
@@ -16,10 +17,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireSuperAdmin = false,
   requireAdmin = false,
   requiredPermission,
+  requiredFeature,
   requireActiveTenant = true
 }) => {
   const { user, appUser, loading: authLoading, hasPermission } = useAuth();
-  const { isTenantActive, loading: tenantLoading } = useTenant();
+  const { isTenantActive, loading: tenantLoading, canAccessFeature } = useTenant();
   const location = useLocation();
 
   if (authLoading || tenantLoading || (user && !appUser)) {
@@ -45,6 +47,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (appUser.role !== 'super_admin') {
     if (requireActiveTenant && !isTenantActive) {
       return <Navigate to="/suspended" replace />;
+    }
+
+    if (requiredFeature && !canAccessFeature(requiredFeature)) {
+      return <Navigate to="/unauthorized" replace />;
     }
 
     if (requireAdmin && appUser.role !== 'company_admin') {

@@ -29,6 +29,7 @@ export interface NavItemConfig {
   section: string;
   isPrimaryBottomNav?: boolean;
   requiredPermission?: string;
+  requiredFeature?: string;
   allowedRoles?: ('super_admin' | 'company_admin' | 'manager' | 'employee')[];
 }
 
@@ -67,7 +68,8 @@ export const TENANT_NAV_SECTIONS: NavSectionConfig[] = [
         shortLabel: 'Templates',
         icon: Copy,
         section: 'Workspace',
-        isPrimaryBottomNav: true
+        isPrimaryBottomNav: true,
+        requiredFeature: 'templates'
       }
     ]
   },
@@ -255,7 +257,8 @@ export const SUPERADMIN_NAV_SECTIONS: NavSectionConfig[] = [
 export function isNavItemAllowed(
   item: NavItemConfig,
   appUser: AppUser | null,
-  hasPermission: (perm: string) => boolean
+  hasPermission: (perm: string) => boolean,
+  canAccessFeature?: (feature: string) => boolean
 ): boolean {
   if (!appUser) return false;
 
@@ -267,6 +270,13 @@ export function isNavItemAllowed(
   // If item specifies allowed roles, check role
   if (item.allowedRoles && !item.allowedRoles.includes(appUser.role as any)) {
     return false;
+  }
+
+  // If item has a feature requirement
+  if (item.requiredFeature && canAccessFeature) {
+    if (!canAccessFeature(item.requiredFeature)) {
+      return false;
+    }
   }
 
   // If item has a permission requirement
@@ -286,14 +296,15 @@ export function isNavItemAllowed(
 export function getFilteredNavSections(
   isSuperAdmin: boolean,
   appUser: AppUser | null,
-  hasPermission: (perm: string) => boolean
+  hasPermission: (perm: string) => boolean,
+  canAccessFeature?: (feature: string) => boolean
 ): NavSectionConfig[] {
   const sourceSections = isSuperAdmin ? SUPERADMIN_NAV_SECTIONS : TENANT_NAV_SECTIONS;
 
   return sourceSections
     .map(section => ({
       title: section.title,
-      items: section.items.filter(item => isNavItemAllowed(item, appUser, hasPermission))
+      items: section.items.filter(item => isNavItemAllowed(item, appUser, hasPermission, canAccessFeature))
     }))
     .filter(section => section.items.length > 0);
 }

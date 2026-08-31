@@ -3,6 +3,8 @@ import { Calculator, User, Building, ShieldCheck } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTenant } from '../contexts/TenantContext';
+import { GlobalSearch } from './GlobalSearch';
+import { Project } from '../types';
 
 const ROUTE_TITLES: Record<string, { title: string; subtitle?: string; section?: string }> = {
   '/': { title: 'Dashboard', subtitle: 'Costing & Manufacturing Overview', section: 'Workspace' },
@@ -29,12 +31,16 @@ const ROUTE_TITLES: Record<string, { title: string; subtitle?: string; section?:
   '/superadmin/developer/logs': { title: 'Application Logs', subtitle: 'Event Stream & Traces', section: 'Developer' },
 };
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onEdit?: (p: Project) => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onEdit }) => {
   const location = useLocation();
   const { appUser } = useAuth();
   const { tenant } = useTenant();
-
   const currentPath = location.pathname;
+
   const pageInfo = ROUTE_TITLES[currentPath] || {
     title: currentPath.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || 'Workspace',
     subtitle: '',
@@ -75,6 +81,8 @@ export const Header: React.FC = () => {
               {pageInfo.title}
             </h1>
           </div>
+
+          {!isSuperAdmin && <GlobalSearch onEdit={onEdit} />}
         </div>
 
         {/* Right: Tenant/User Info & Badges */}
@@ -112,7 +120,6 @@ export const Header: React.FC = () => {
             </div>
           </div>
         </div>
-
       </div>
     </header>
   );

@@ -95,12 +95,19 @@ function AppRoutes() {
       
       <Route element={
         <ProtectedRoute>
-          <Layout />
+          <Layout onEdit={handleEditProject} />
         </ProtectedRoute>
       }>
         <Route path="/" element={<Dashboard onEdit={handleEditProject} />} />
         <Route path="/projects" element={<CostingsList onEdit={handleEditProject} />} />
-        <Route path="/templates" element={<TemplatesList onEdit={handleEditProject} onUseTemplate={handleSelectTemplate} />} />
+        <Route 
+          path="/templates" 
+          element={
+            <ProtectedRoute requiredFeature="templates">
+              <TemplatesList onEdit={handleEditProject} onUseTemplate={handleSelectTemplate} />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/profile" element={<Settings />} />
         <Route 
           path="/billing" 
@@ -129,7 +136,7 @@ function AppRoutes() {
 
       <Route element={
         <ProtectedRoute requireSuperAdmin>
-          <Layout />
+          <Layout onEdit={handleEditProject} />
         </ProtectedRoute>
       }>
         <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />

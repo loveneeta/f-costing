@@ -64,6 +64,40 @@ export const LoginView: React.FC = () => {
     }
   };
 
+  const handleDemoSignIn = async () => {
+    setError('');
+    setMessage('');
+    setLoading(true);
+    const demoEmail = import.meta.env.VITE_DEMO_EMAIL || "demo@woodcost.com";
+    const demoPassword = import.meta.env.VITE_DEMO_PASSWORD;
+    if (!demoPassword) {
+      setError("Demo credentials are not configured in the environment.");
+      setLoading(false);
+      return;
+    }
+    
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+
+    try {
+      try {
+        await login(demoEmail, demoPassword);
+      } catch (loginErr: any) {
+        // If demo user doesn't exist yet, auto-create
+        await register({
+          email: demoEmail,
+          password: demoPassword,
+          name: "Demo Manager",
+          companyName: "Wood Costing Demo Corp"
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || "Could not sign in with demo account.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-between bg-neutral-100">
       <div className="flex-1 flex items-center justify-center px-4 py-8">
@@ -194,6 +228,19 @@ export const LoginView: React.FC = () => {
             )}
           </button>
         </form>
+
+        {mode === 'signin' && (
+          <div className="mt-4 pt-4 border-t border-neutral-200">
+            <button
+              type="button"
+              onClick={handleDemoSignIn}
+              disabled={loading}
+              className="w-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-medium py-2 px-3 rounded-lg border border-neutral-300 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <span>Explore Demo Workspace (1-Click Sign In)</span>
+            </button>
+          </div>
+        )}
 
         {mode === 'forgot' && (
           <div className="mt-6 text-center">

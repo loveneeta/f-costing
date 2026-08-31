@@ -18,14 +18,14 @@ export const BottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { appUser, logout, hasPermission } = useAuth();
-  const { tenant } = useTenant();
+  const { tenant, canAccessFeature } = useTenant();
   const moreMenuTitleId = useId();
 
   const isSuperAdmin = appUser?.role === 'super_admin';
   const currentPath = location.pathname;
 
   // Get all filtered sections based on user role and permissions
-  const navSections = getFilteredNavSections(isSuperAdmin, appUser, hasPermission);
+  const navSections = getFilteredNavSections(isSuperAdmin, appUser, hasPermission, canAccessFeature);
   
   // Extract all available items
   const allItems: NavItemConfig[] = navSections.flatMap(section => section.items);
@@ -175,18 +175,19 @@ export const BottomNav: React.FC = () => {
         role="dialog"
         aria-modal="true"
         aria-labelledby={moreMenuTitleId}
-        className={`fixed left-0 right-0 z-40 md:hidden bg-white border-t border-neutral-200 rounded-t-2xl shadow-2xl transition-transform duration-250 ease-out flex flex-col ${
-          moreOpen ? 'translate-y-0' : 'translate-y-full'
+        className={`fixed left-0 right-0 bottom-0 z-50 md:hidden bg-white border-t border-neutral-200 rounded-t-2xl shadow-2xl transition-all duration-300 ease-out flex flex-col max-h-[85vh] ${
+          moreOpen 
+            ? 'translate-y-0 opacity-100 pointer-events-auto visible' 
+            : 'translate-y-full opacity-0 pointer-events-none invisible'
         }`}
         style={{
-          bottom: 'calc(3.5rem + env(safe-area-inset-bottom, 0px))',
-          maxHeight: 'calc(80vh - 3.5rem - env(safe-area-inset-bottom, 0px))'
+          paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))'
         }}
       >
         {/* Sheet Grab Handle & Header */}
-        <div className="flex-shrink-0 pt-3 pb-2.5 px-4 border-b border-neutral-100 flex items-center justify-between">
+        <div className="flex-shrink-0 pt-3.5 pb-3 px-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/70 rounded-t-2xl">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
               {isSuperAdmin ? <ShieldCheck size={16} /> : <Building size={16} />}
             </div>
             <div className="min-w-0">
@@ -203,7 +204,7 @@ export const BottomNav: React.FC = () => {
             type="button"
             onClick={() => setMoreOpen(false)}
             aria-label="Close more menu"
-            className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-800 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200/60 rounded-lg transition-colors"
           >
             <X size={18} />
           </button>

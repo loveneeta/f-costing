@@ -14,7 +14,7 @@ import { useTenant } from "../contexts/TenantContext";
 
 export function Settings() {
   const { settings, updateSettings } = useStore();
-  const { changePassword } = useAuth();
+  const { changePassword, deleteAccount } = useAuth();
   const { updateTenant } = useTenant();
   
   const [currentPassword, setCurrentPassword] = useState("");
@@ -22,6 +22,20 @@ export function Settings() {
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdError, setPwdError] = useState("");
   const [pwdSuccess, setPwdSuccess] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) return;
+    setIsDeletingAccount(true);
+    setDeleteError("");
+    try {
+      await deleteAccount();
+    } catch (err: any) {
+      setDeleteError(err.message || "Failed to delete account");
+      setIsDeletingAccount(false);
+    }
+  };
 
   const handleCompanyChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -617,6 +631,26 @@ export function Settings() {
               </button>
             </div>
           </form>
+
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <h3 className="text-sm font-bold text-red-600 mb-2">Danger Zone</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Permanently delete your personal account and remove your data from this workspace.
+            </p>
+            {deleteError && (
+              <div className="bg-red-50 text-red-700 p-3 rounded-xl text-xs sm:text-sm border border-red-200 mb-4 flex items-start gap-2">
+                <AlertCircle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
+                <div>{deleteError}</div>
+              </div>
+            )}
+            <button
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount}
+              className="inline-flex items-center justify-center bg-white border border-red-200 text-red-600 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold hover:bg-red-50 disabled:opacity-70 transition-colors"
+            >
+              {isDeletingAccount ? "Deleting..." : "Delete Account"}
+            </button>
+          </div>
         </div>
       </section>
     </div>

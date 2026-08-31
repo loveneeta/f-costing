@@ -5,7 +5,9 @@ import { BottomNav } from './BottomNav';
 import { Outlet } from 'react-router-dom';
 import { Footer } from './Footer';
 
-export const Layout: React.FC = () => {
+import { Project } from '../types';
+
+export const Layout: React.FC<{ onEdit?: (p: Project) => void }> = ({ onEdit }) => {
   return (
     <div className="flex h-screen w-full bg-neutral-100 font-sans text-neutral-900 selection:bg-blue-100 overflow-hidden min-w-0">
       {/* Desktop Docked Sidebar (>= 768px ONLY - Hidden on Mobile) */}
@@ -14,8 +16,8 @@ export const Layout: React.FC = () => {
       </aside>
 
       {/* Main Content Area (Header + Scrollable Page + Footer + Mobile Bottom Clearance) */}
-      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto overflow-x-hidden bg-neutral-100 relative">
-        <Header />
+      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto overflow-x-hidden bg-neutral-100 relative custom-scrollbar">
+        <Header onEdit={onEdit} />
         
         <main className="flex-1 min-w-0 flex flex-col justify-between w-full pb-20 sm:pb-22 md:pb-0">
           <div className="flex-1 min-w-0 w-full">

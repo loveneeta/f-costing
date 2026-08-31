@@ -7,7 +7,7 @@ import { getFilteredNavSections } from '../navigationConfig';
 
 export const Sidebar: React.FC = () => {
   const { appUser, logout, hasPermission } = useAuth();
-  const { tenant } = useTenant();
+  const { tenant, canAccessFeature } = useTenant();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -19,7 +19,7 @@ export const Sidebar: React.FC = () => {
     navigate('/login');
   };
 
-  const navSections = getFilteredNavSections(isSuperAdmin, appUser, hasPermission);
+  const navSections = getFilteredNavSections(isSuperAdmin, appUser, hasPermission, canAccessFeature);
 
   const NavLink = ({ to, icon: Icon, label, exact = true }: { to: string, icon: any, label: string, exact?: boolean }) => {
     const isActive = exact 
